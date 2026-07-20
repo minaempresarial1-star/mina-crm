@@ -1,4 +1,4 @@
-const CACHE = 'mina-operacion-v10';
+const CACHE = 'mina-operacion-v11';
 const ASSETS = ['./', './index.html', './styles.css', './src/app.js', './src/store.js', './src/config.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {

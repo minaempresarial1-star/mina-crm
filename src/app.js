@@ -18,6 +18,9 @@ const state = {
   prospects: [],
   view: new URLSearchParams(location.search).get('view') || 'today',
   mobileStage: STAGES[0],
+  pipelineFilter: 'all',
+  calendarCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  calendarSelected: dateInputValue(new Date()),
   photo: null,
   photoId: null,
   photoCache: new Map(),
@@ -48,6 +51,33 @@ function formatDate(dateString) {
 
 function isOverdue(prospect) {
   return !prospect.completed && prospect.dueDate && prospect.dueDate < dateInputValue(new Date());
+}
+
+function isUncontacted(prospect) {
+  return !prospect.completed && STAGES.indexOf(prospect.stage) < 2;
+}
+
+function pipelineFilterDetails(filter, prospects) {
+  const definitions = {
+    all: {
+      label: 'Todos los prospectos',
+      description: 'Relaciones abiertas que todavía requieren seguimiento, sin importar su etapa.'
+    },
+    uncontacted: {
+      label: 'Sin contacto',
+      description: 'Prospectos que siguen en “Por investigar” o “Por contactar” y aún no registran un acercamiento.'
+    },
+    overdue: {
+      label: 'Seguimientos vencidos',
+      description: 'Acciones cuya fecha límite ya pasó y todavía no están completadas. Reprográmalas o márcalas como realizadas.'
+    }
+  };
+  const matches = prospects.filter(prospect => {
+    if (filter === 'uncontacted') return isUncontacted(prospect);
+    if (filter === 'overdue') return isOverdue(prospect);
+    return true;
+  });
+  return { ...definitions[filter], matches };
 }
 
 function avatar(owner) {
@@ -154,10 +184,10 @@ function todayView() {
   const tasks = active.slice(0, 8);
   return `<main class="page">
     <header class="page-header"><div><p class="eyebrow">Operación compartida</p><h1>Cada contacto necesita<br><span>un siguiente paso.</span></h1></div><div class="header-actions"><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
-    <section class="stats"><div class="stat"><span>Vencidos</span><strong>${overdue}</strong></div><div class="stat"><span>Por activar</span><strong>${unactivated}</strong></div><div class="stat"><span>Activos</span><strong>${active.length}</strong></div></section>
+    <section class="stats" aria-label="Filtros rápidos"><button class="stat" data-dashboard-filter="overdue"><span>Vencidos</span><strong>${overdue}</strong><small>Ver y resolver</small></button><button class="stat" data-dashboard-filter="uncontacted"><span>Por activar</span><strong>${unactivated}</strong><small>Ver sin contacto</small></button><button class="stat" data-dashboard-filter="all"><span>Activos</span><strong>${active.length}</strong><small>Ver pipeline</small></button></section>
     <div class="content-grid"><section><div class="section-head"><div><p class="eyebrow">Agenda compartida</p><h2>Próximas acciones</h2></div></div>
       <div class="task-list">${tasks.length ? tasks.map((p, index) => `<article class="task ${isOverdue(p) ? 'overdue' : ''}"><span class="task__number">${String(index + 1).padStart(2, '0')}</span><div><h3>${escapeHtml(p.nextAction)}</h3><p>${escapeHtml(p.name)} · ${escapeHtml(p.specialty)} · ${escapeHtml(p.owner)} · ${formatDate(p.dueDate)}</p></div><button class="task__complete" data-complete="${p.id}" aria-label="Completar seguimiento">✓</button></article>`).join('') : emptyState('La agenda está vacía', 'Captura una tarjeta para crear el primer seguimiento.')}</div>
-    </section><aside><div class="focus-panel"><p class="eyebrow" style="color:#f59e0b">Siguiente mejor acción</p><h3>${active.length ? 'Resolver el contacto más próximo' : 'Registrar lo obtenido en campo'}</h3><p>${active.length ? `${escapeHtml(active[0].name)} tiene el siguiente compromiso más cercano: ${escapeHtml(active[0].nextAction)}.` : 'Cada tarjeta puede convertirse inmediatamente en responsable, contexto y fecha.'}</p><button class="button button--amber" data-open-capture>Registrar una tarjeta</button></div></aside></div>
+    </section><aside><div class="focus-panel"><p class="eyebrow" style="color:#f59e0b">Siguiente mejor acción</p><h3>${active.length ? escapeHtml(active[0].nextAction) : 'Registrar lo obtenido en campo'}</h3><p>${active.length ? `${escapeHtml(active[0].name)} · ${escapeHtml(active[0].owner)} · ${formatDate(active[0].dueDate)}. Abre su ficha para trabajar esta acción y dejar el seguimiento actualizado.` : 'Cada tarjeta puede convertirse inmediatamente en responsable, contexto y fecha.'}</p>${active.length ? `<button class="button button--amber" data-focus-prospect="${active[0].id}">Atender seguimiento de ${escapeHtml(active[0].name)}</button>` : '<button class="button button--amber" data-open-capture>Registrar una tarjeta</button>'}</div></aside></div>
   </main>`;
 }
 
@@ -176,13 +206,24 @@ function leadCard(prospect, { mobile = false } = {}) {
 
 function pipelineView() {
   const active = state.prospects.filter(p => !p.completed);
+  const filter = pipelineFilterDetails(state.pipelineFilter, active);
+  const visible = filter.matches;
   if (!STAGES.includes(state.mobileStage)) state.mobileStage = STAGES[0];
-  const mobileProspects = active.filter(p => p.stage === state.mobileStage);
+  if (visible.length && !visible.some(prospect => prospect.stage === state.mobileStage)) {
+    state.mobileStage = STAGES.find(stage => visible.some(prospect => prospect.stage === stage)) || STAGES[0];
+  }
+  const mobileProspects = visible.filter(p => p.stage === state.mobileStage);
+  const metrics = [
+    ['all', 'Prospectos', active.length],
+    ['uncontacted', 'Sin contacto', active.filter(isUncontacted).length],
+    ['overdue', 'Vencidos', active.filter(isOverdue).length]
+  ];
   return `<main class="page">
-    <header class="page-header"><div><p class="eyebrow">MINA · Operación patrimonial</p><h1 style="font-size:34px">Pipeline ejecutivo</h1></div><div class="header-actions"><button class="button button--quiet">Filtrar</button><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
-    <section class="pipeline-hero"><div><p class="eyebrow" style="color:#f59e0b">Seguimiento comercial</p><h1>De contacto en contacto,<br><span>ningún compromiso se pierde.</span></h1></div><div><span class="micro">Prospectos</span><strong>${active.length}</strong></div><div><span class="micro">Sin contacto</span><strong>${active.filter(p => STAGES.indexOf(p.stage) < 2).length}</strong></div><div><span class="micro">Vencidos</span><strong>${active.filter(isOverdue).length}</strong></div></section>
-    <div class="board-wrap"><section class="board">${STAGES.map((stage, index) => `<div class="pipeline-column" data-stage="${stage}"><header class="pipeline-column__head"><h2>${stage}</h2><span class="stage-count">${String(index + 1).padStart(2, '0')} · ${active.filter(p => p.stage === stage).length}</span></header>${active.filter(p => p.stage === stage).map(p => leadCard(p)).join('') || '<p class="micro muted" style="padding:8px">Arrastra aquí un prospecto.</p>'}</div>`).join('')}</section></div>
-    <section class="mobile-pipeline"><div class="stage-tabs">${STAGES.map(stage => `<button class="stage-tab ${stage === state.mobileStage ? 'active' : ''}" data-mobile-stage="${stage}">${stage} · ${active.filter(p => p.stage === stage).length}</button>`).join('')}</div><p class="swipe-instruction">Desliza una tarjeta → para avanzar o ← para regresarla. También puedes usar “Mover de etapa”.</p><div class="mobile-stage"><header class="mobile-stage__head"><h2>${state.mobileStage}</h2><span class="stage-count">${mobileProspects.length}</span></header>${mobileProspects.map(p => leadCard(p, { mobile: true })).join('') || emptyState('Esta etapa está vacía', 'Selecciona otra etapa o captura un nuevo prospecto.')}</div></section>
+    <header class="page-header"><div><p class="eyebrow">MINA · Operación patrimonial</p><h1 style="font-size:34px">Pipeline ejecutivo</h1></div><div class="header-actions"><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
+    <section class="pipeline-hero"><div><p class="eyebrow" style="color:#f59e0b">Seguimiento comercial</p><h1>De contacto en contacto,<br><span>ningún compromiso se pierde.</span></h1></div>${metrics.map(([key, label, count]) => `<button class="pipeline-metric ${state.pipelineFilter === key ? 'active' : ''}" data-pipeline-filter="${key}" aria-pressed="${state.pipelineFilter === key}"><span class="micro">${label}</span><strong>${count}</strong><small>${key === 'overdue' ? '¿Qué significa?' : 'Filtrar tablero'}</small></button>`).join('')}</section>
+    <section class="filter-explainer" aria-live="polite"><div><span class="filter-explainer__count">${visible.length}</span><div><strong>${filter.label}</strong><p>${filter.description}</p></div></div>${state.pipelineFilter !== 'all' ? '<button class="button button--quiet" data-pipeline-filter="all">Quitar filtro</button>' : ''}</section>
+    <div class="board-wrap"><section class="board">${STAGES.map((stage, index) => `<div class="pipeline-column" data-stage="${stage}"><header class="pipeline-column__head"><h2>${stage}</h2><span class="stage-count">${String(index + 1).padStart(2, '0')} · ${visible.filter(p => p.stage === stage).length}</span></header>${visible.filter(p => p.stage === stage).map(p => leadCard(p)).join('') || '<p class="micro muted" style="padding:8px">No hay prospectos con este filtro.</p>'}</div>`).join('')}</section></div>
+    <section class="mobile-pipeline"><div class="stage-tabs">${STAGES.map(stage => `<button class="stage-tab ${stage === state.mobileStage ? 'active' : ''}" data-mobile-stage="${stage}">${stage} · ${visible.filter(p => p.stage === stage).length}</button>`).join('')}</div><p class="swipe-instruction">Desliza una tarjeta → para avanzar o ← para regresarla. También puedes usar “Mover de etapa”.</p><div class="mobile-stage"><header class="mobile-stage__head"><h2>${state.mobileStage}</h2><span class="stage-count">${mobileProspects.length}</span></header>${mobileProspects.map(p => leadCard(p, { mobile: true })).join('') || emptyState('Esta etapa está vacía', 'Selecciona otra etapa o cambia el filtro.', false)}</div></section>
   </main>`;
 }
 
@@ -193,9 +234,93 @@ function captureView() {
   </main>`;
 }
 
+function addDays(date, amount) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + amount);
+  return copy;
+}
+
+function localCompactDateTime(date) {
+  const pad = value => String(value).padStart(2, '0');
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+}
+
+function calendarEntries() {
+  return state.prospects.filter(prospect => !prospect.completed).flatMap(prospect => {
+    const entries = [];
+    const appointmentDate = prospect.appointmentAt?.slice(0, 10);
+    if (prospect.dueDate && prospect.dueDate !== appointmentDate) {
+      entries.push({ type: 'followup', date: prospect.dueDate, prospect, title: prospect.nextAction || `Seguimiento con ${prospect.name}` });
+    }
+    if (appointmentDate) {
+      entries.push({ type: 'appointment', date: appointmentDate, prospect, title: `Cita con ${prospect.name}` });
+    } else if (prospect.dueDate && !entries.length) {
+      entries.push({ type: 'followup', date: prospect.dueDate, prospect, title: prospect.nextAction || `Seguimiento con ${prospect.name}` });
+    }
+    return entries;
+  }).sort((a, b) => `${a.date}${a.prospect.appointmentAt || ''}`.localeCompare(`${b.date}${b.prospect.appointmentAt || ''}`));
+}
+
+function calendarTimeLabel(entry) {
+  if (entry.type !== 'appointment') return '';
+  return new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(new Date(entry.prospect.appointmentAt));
+}
+
+function googleCalendarUrl(entry) {
+  const prospect = entry.prospect;
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: entry.title,
+    details: `${prospect.nextAction || 'Seguimiento patrimonial'}\nResponsable: ${prospect.owner}\nRegistrado en MINA CRM`,
+    location: prospect.location || prospect.organization || '',
+    ctz: 'America/Mexico_City'
+  });
+  if (entry.type === 'appointment') {
+    const start = new Date(prospect.appointmentAt);
+    const end = new Date(start.getTime() + 30 * 60000);
+    params.set('dates', `${localCompactDateTime(start)}/${localCompactDateTime(end)}`);
+  } else {
+    const start = new Date(`${entry.date}T12:00:00`);
+    params.set('dates', `${entry.date.replaceAll('-', '')}/${dateInputValue(addDays(start, 1)).replaceAll('-', '')}`);
+  }
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function calendarView() {
-  const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() + index); return date; });
-  return `<main class="page"><header class="page-header"><div><p class="eyebrow">Agenda compartida</p><h1 style="font-size:45px">Lo que debe ocurrir<br><span>esta semana.</span></h1></div><button class="button button--primary" data-open-capture>＋ Capturar</button></header><section class="calendar-grid">${days.map(day => { const key = dateInputValue(day); const items = state.prospects.filter(p => !p.completed && (p.dueDate === key || p.appointmentAt?.slice(0, 10) === key)); return `<div class="calendar-day"><h3>${new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }).format(day)}</h3>${items.map(p => `<article class="calendar-item"><strong>${escapeHtml(p.name)}</strong>${p.appointmentAt?.slice(0, 10) === key ? `Cita · ${new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(new Date(p.appointmentAt))}` : escapeHtml(p.nextAction)} · ${escapeHtml(p.owner)}</article>`).join('') || '<span class="micro muted">Sin seguimientos</span>'}</div>`; }).join('')}</section></main>`;
+  const cursor = state.calendarCursor;
+  const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const gridStart = addDays(monthStart, -monthStart.getDay());
+  const days = Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
+  const entries = calendarEntries();
+  const todayKey = dateInputValue(new Date());
+  const selectedKey = state.calendarSelected;
+  const selectedDate = new Date(`${selectedKey}T12:00:00`);
+  const selectedEntries = entries.filter(entry => entry.date === selectedKey);
+  const monthLabel = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(monthStart);
+  const selectedLabel = new Intl.DateTimeFormat('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }).format(selectedDate);
+  const weekdays = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
+  return `<main class="page calendar-page">
+    <header class="calendar-toolbar">
+      <div class="calendar-toolbar__identity"><p class="eyebrow">Agenda compartida</p><h1>${monthLabel}</h1></div>
+      <div class="calendar-toolbar__nav"><button class="button button--quiet" data-calendar-nav="today">Hoy</button><button class="calendar-nav-button" data-calendar-nav="prev" aria-label="Mes anterior">‹</button><button class="calendar-nav-button" data-calendar-nav="next" aria-label="Mes siguiente">›</button></div>
+      <div class="calendar-toolbar__actions"><button class="button button--quiet" data-export-calendar>⇩ Exportar mes</button><button class="button button--primary" data-open-capture>＋ Crear seguimiento</button></div>
+    </header>
+    <section class="calendar-sync-note"><span class="calendar-sync-note__icon">G</span><div><strong>Llévalo a tu calendario personal</strong><p>Abre un evento y elige “Añadir a Google Calendar”, o exporta el mes completo como archivo de calendario.</p></div></section>
+    <section class="month-calendar" aria-label="Calendario mensual de ${escapeHtml(monthLabel)}">
+      <div class="month-weekdays">${weekdays.map(day => `<span>${day}</span>`).join('')}</div>
+      <div class="month-grid">${days.map(day => {
+        const key = dateInputValue(day);
+        const dayEntries = entries.filter(entry => entry.date === key);
+        const outside = day.getMonth() !== cursor.getMonth();
+        return `<button class="month-day ${outside ? 'outside' : ''} ${key === todayKey ? 'today' : ''} ${key === selectedKey ? 'selected' : ''}" data-calendar-select="${key}" aria-label="${new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long' }).format(day)}, ${dayEntries.length} eventos"><span class="month-day__number">${day.getDate()}</span><span class="month-day__events">${dayEntries.slice(0, 3).map(entry => `<span class="month-event ${entry.type}"><b>${calendarTimeLabel(entry)}</b>${escapeHtml(entry.prospect.name)}</span>`).join('')}${dayEntries.length > 3 ? `<span class="month-more">+${dayEntries.length - 3} más</span>` : ''}</span></button>`;
+      }).join('')}</div>
+    </section>
+    <section class="day-agenda">
+      <header><div><p class="eyebrow">Día seleccionado</p><h2>${selectedLabel}</h2></div><span class="day-agenda__count">${selectedEntries.length} ${selectedEntries.length === 1 ? 'evento' : 'eventos'}</span></header>
+      <div class="day-agenda__list">${selectedEntries.length ? selectedEntries.map(entry => `<article class="agenda-event"><span class="agenda-event__rail ${entry.type}"></span><div><span class="micro muted">${entry.type === 'appointment' ? `${calendarTimeLabel(entry)} · Cita confirmada` : `Todo el día · Seguimiento`}</span><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.prospect.nextAction)} · ${escapeHtml(entry.prospect.owner)}</p></div><div class="agenda-event__actions"><a class="button button--google" href="${escapeHtml(googleCalendarUrl(entry))}" target="_blank" rel="noopener">Añadir a Google Calendar</a><button class="button button--quiet" data-edit="${entry.prospect.id}">Editar seguimiento</button></div></article>`).join('') : `<div class="empty"><strong>No hay eventos este día</strong><p class="muted micro">Selecciona otro día o crea un seguimiento con fecha.</p><button class="button button--primary" data-open-capture>Crear seguimiento</button></div>`}</div>
+    </section>
+  </main>`;
 }
 
 function contactsView() {
@@ -383,9 +508,85 @@ function bindMobileSwipe() {
   });
 }
 
+function icsEscape(value = '') {
+  return String(value).replaceAll('\\', '\\\\').replaceAll(';', '\\;').replaceAll(',', '\\,').replace(/\r?\n/g, '\\n');
+}
+
+function exportCalendarMonth() {
+  const cursor = state.calendarCursor;
+  const monthEntries = calendarEntries().filter(entry => {
+    const date = new Date(`${entry.date}T12:00:00`);
+    return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth();
+  });
+  if (!monthEntries.length) {
+    showToast('Este mes no tiene eventos para exportar.');
+    return;
+  }
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MINA//CRM compartido//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  monthEntries.forEach(entry => {
+    const prospect = entry.prospect;
+    lines.push('BEGIN:VEVENT', `UID:${icsEscape(`${prospect.id}-${entry.type}@mina-crm`)}`, `DTSTAMP:${stamp}`);
+    if (entry.type === 'appointment') {
+      const start = new Date(prospect.appointmentAt);
+      const end = new Date(start.getTime() + 30 * 60000);
+      lines.push(`DTSTART;TZID=America/Mexico_City:${localCompactDateTime(start)}`, `DTEND;TZID=America/Mexico_City:${localCompactDateTime(end)}`);
+    } else {
+      const start = new Date(`${entry.date}T12:00:00`);
+      lines.push(`DTSTART;VALUE=DATE:${entry.date.replaceAll('-', '')}`, `DTEND;VALUE=DATE:${dateInputValue(addDays(start, 1)).replaceAll('-', '')}`);
+    }
+    lines.push(
+      `SUMMARY:${icsEscape(entry.title)}`,
+      `DESCRIPTION:${icsEscape(`${prospect.nextAction || 'Seguimiento patrimonial'}\nResponsable: ${prospect.owner}\nRegistrado en MINA CRM`)}`,
+      `LOCATION:${icsEscape(prospect.location || prospect.organization || '')}`,
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `MINA-${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}.ics`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`${monthEntries.length} eventos listos para tu calendario.`);
+}
+
 function bindViewEvents() {
   document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   document.querySelectorAll('[data-open-capture]').forEach(button => button.addEventListener('click', openProspectDialog));
+  document.querySelectorAll('[data-dashboard-filter]').forEach(button => button.addEventListener('click', () => {
+    state.pipelineFilter = button.dataset.dashboardFilter;
+    setView('pipeline');
+  }));
+  document.querySelectorAll('[data-pipeline-filter]').forEach(button => button.addEventListener('click', () => {
+    state.pipelineFilter = button.dataset.pipelineFilter;
+    render();
+  }));
+  document.querySelectorAll('[data-focus-prospect]').forEach(button => button.addEventListener('click', () => openEditDialog(button.dataset.focusProspect)));
+  document.querySelectorAll('[data-calendar-nav]').forEach(button => button.addEventListener('click', () => {
+    const direction = button.dataset.calendarNav;
+    if (direction === 'today') {
+      const today = new Date();
+      state.calendarCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+      state.calendarSelected = dateInputValue(today);
+    } else {
+      const delta = direction === 'next' ? 1 : -1;
+      state.calendarCursor = new Date(state.calendarCursor.getFullYear(), state.calendarCursor.getMonth() + delta, 1);
+      state.calendarSelected = dateInputValue(state.calendarCursor);
+    }
+    render();
+  }));
+  document.querySelectorAll('[data-calendar-select]').forEach(button => button.addEventListener('click', () => {
+    state.calendarSelected = button.dataset.calendarSelect;
+    const selected = new Date(`${state.calendarSelected}T12:00:00`);
+    state.calendarCursor = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    render();
+  }));
+  document.querySelectorAll('[data-export-calendar]').forEach(button => button.addEventListener('click', exportCalendarMonth));
   bindEditButtons();
   document.querySelectorAll('[data-mobile-stage]').forEach(button => button.addEventListener('click', () => { state.mobileStage = button.dataset.mobileStage; render(); }));
   document.querySelectorAll('[data-move]').forEach(button => button.addEventListener('click', () => openMoveDialog(button.dataset.move)));
@@ -456,6 +657,7 @@ photoInput.addEventListener('change', async () => {
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
+  const dueDateValue = document.querySelector('#dueDateInput').value;
   const prospect = {
     name: document.querySelector('#nameInput').value.trim(),
     specialty: document.querySelector('#specialtyInput').value.trim(),
@@ -466,7 +668,9 @@ form.addEventListener('submit', async event => {
     email: document.querySelector('#emailInput').value.trim(),
     location: document.querySelector('#locationInput').value.trim(),
     nextAction: document.querySelector('#nextActionInput').value.trim(),
-    dueDate: document.querySelector('#dueDateInput').value,
+    // Noon prevents a date-only value from moving to the previous day when
+    // Apps Script converts it through the America/Mexico_City timezone.
+    dueDate: dueDateValue ? `${dueDateValue}T12:00:00` : '',
     appointmentAt: document.querySelector('#appointmentInput').value,
     context: document.querySelector('#contextInput').value.trim(),
     stage: document.querySelector('#stageInput').value,
