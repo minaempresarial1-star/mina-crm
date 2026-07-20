@@ -1,0 +1,12 @@
+{
+  "name": "MINA · Operación Patrimonial",
+  "short_name": "MINA Operación",
+  "description": "Seguimiento comercial compartido de Alejandro y Mario.",
+  "start_url": "./?view=today",
+  "display": "standalone",
+  "background_color": "#efebe2",
+  "theme_color": "#0b1538",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
