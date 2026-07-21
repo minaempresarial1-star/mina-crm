@@ -50,3 +50,16 @@ GitHub Pages publica directamente la raíz de la rama `main`. Antes de actualiza
 1. validar la sintaxis de los archivos JavaScript;
 2. revisar que no existan claves ni datos de prospectos versionados;
 3. comprobar que la aplicación y la guía respondan correctamente en producción.
+
+El backend canónico vive en el repositorio privado hermano
+`../mina-crm-backend/`. Se despliega manualmente en el único proyecto de Google Apps
+Script compartido. Publicar GitHub Pages no redespliega Apps Script.
+
+## Clon de trabajo
+
+La ubicación local canónica es:
+
+`/Users/alejandrohuante/Desktop/MINA/proyectos/mina-crm`
+
+No usar `mario-crm-app`: esa carpeta apunta al repositorio retirado
+`alejandrohuante16-jpg/mina-operacion-patrimonial`.
