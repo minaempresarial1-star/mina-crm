@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1538">
+  <title>Guía de operación · MINA CRM</title>
+  <style>
+    :root {
+      --navy: #0b1538;
+      --navy-2: #111d49;
+      --ivory: #efebe2;
+      --paper: #ffffff;
+      --amber: #f59e0b;
+      --cobalt: #1a40b8;
+      --ink: #15263b;
+      --muted: #5b6675;
+      --line: #ddd8cf;
+      --soft: #e7e2d9;
+      --success: #237a50;
+      --shadow: 0 18px 46px rgba(11, 21, 56, .12);
+      --font: Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--ivory); }
+    body { margin: 0; color: var(--ink); background: var(--ivory); font-family: var(--font); }
+    button, a { font: inherit; }
+    a { color: inherit; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid rgba(26, 64, 184, .28); outline-offset: 3px; }
+
+    .eyebrow { margin: 0; color: var(--cobalt); font: 800 10px/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { content: "◆ "; color: var(--amber); }
+    .muted { color: var(--muted); }
+    .mono { font-family: var(--mono); }
+
+    .shell { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: 100vh; }
+    .rail { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; padding: 24px 19px; color: white; background: var(--navy); }
+    .brand { display: flex; align-items: center; gap: 11px; margin: 0 7px 27px; text-decoration: none; }
+    .brand__mark { display: grid; width: 38px; height: 38px; place-items: center; color: var(--amber); border: 1px solid rgba(255,255,255,.4); border-radius: 50%; font-weight: 900; }
+    .brand strong { display: block; font-size: 18px; font-weight: 900; }
+    .brand small { display: block; color: #aeb6ca; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+    .rail__label { margin: 0 9px 8px; color: #7f8aa7; font: 700 9px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+    .toc { display: grid; gap: 3px; overflow: auto; padding-right: 3px; }
+    .toc a { display: grid; grid-template-columns: 24px 1fr; gap: 7px; align-items: center; padding: 9px 10px; color: #bbc3d6; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 700; }
+    .toc a:hover, .toc a.active { color: white; background: rgba(255,255,255,.09); }
+    .toc b { color: var(--amber); font: 700 9px var(--mono); }
+    .rail__footer { margin-top: auto; padding: 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 11px; }
+    .progress__meta { display: flex; justify-content: space-between; color: #aeb6ca; font-size: 9px; }
+    .progress__bar { height: 5px; margin-top: 9px; overflow: hidden; background: rgba(255,255,255,.13); border-radius: 99px; }
+    .progress__bar span { display: block; width: 0; height: 100%; background: var(--amber); transition: width .25s ease; }
+
+    main { min-width: 0; }
+    .hero { position: relative; min-height: 530px; overflow: hidden; padding: 55px clamp(28px, 6vw, 82px) 48px; color: white; background: var(--navy); }
+    .hero::after { content: ""; position: absolute; width: 480px; height: 480px; right: -170px; bottom: -250px; border: 1px solid rgba(245,158,11,.5); border-radius: 50%; box-shadow: 0 0 0 70px rgba(245,158,11,.035), 0 0 0 140px rgba(245,158,11,.025); }
+    .hero__content { position: relative; z-index: 1; max-width: 900px; }
+    .hero .eyebrow { color: var(--amber); }
+    .hero h1 { max-width: 800px; margin: 18px 0 22px; font-size: clamp(49px, 7vw, 88px); line-height: .91; letter-spacing: -.067em; }
+    .hero h1 span { color: var(--amber); }
+    .hero__lead { max-width: 660px; margin: 0; color: #c1c8d8; font-size: 17px; line-height: 1.65; }
+    .hero__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 16px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 850; text-decoration: none; }
+    .button--amber { color: var(--navy); background: var(--amber); }
+    .button--light { color: white; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+    .button--quiet { color: var(--navy); background: var(--soft); }
+    .hero__rule { position: relative; z-index: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 15px; align-items: center; max-width: 730px; margin-top: 42px; padding: 17px 18px; border: 1px solid rgba(255,255,255,.14); border-left: 4px solid var(--amber); border-radius: 10px; background: rgba(255,255,255,.055); }
+    .hero__rule b { color: var(--amber); font: 900 10px var(--mono); }
+    .hero__rule strong { display: block; font-size: 15px; }
+    .hero__rule small { display: block; margin-top: 3px; color: #aeb6ca; line-height: 1.45; }
+
+    .content { max-width: 1180px; margin: 0 auto; padding: 20px clamp(22px, 5vw, 64px) 100px; }
+    .section { scroll-margin-top: 22px; padding: 62px 0; border-bottom: 1px solid var(--line); }
+    .section:last-child { border-bottom: 0; }
+    .section__head { display: grid; grid-template-columns: 84px minmax(0, 680px); gap: 24px; align-items: start; margin-bottom: 30px; }
+    .section__number { display: grid; width: 68px; height: 68px; place-items: center; color: var(--navy); background: var(--amber); border-radius: 12px; font: 900 15px var(--mono); }
+    .section h2 { margin: 7px 0 10px; color: var(--navy); font-size: clamp(32px, 4vw, 49px); line-height: .98; letter-spacing: -.052em; }
+    .section__intro { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+
+    .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border-top: 3px solid var(--amber); background: var(--line); }
+    .principle { padding: 23px; background: rgba(255,255,255,.76); }
+    .principle b { color: var(--cobalt); font: 900 10px var(--mono); }
+    .principle h3 { margin: 15px 0 7px; color: var(--navy); font-size: 17px; }
+    .principle p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    .steps { display: grid; gap: 12px; }
+    .step { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 17px; align-items: start; padding: 18px; background: white; border: 1px solid var(--line); border-radius: 12px; }
+    .step__number { display: grid; width: 50px; height: 50px; place-items: center; color: white; background: var(--navy); border-radius: 10px; font: 900 11px var(--mono); }
+    .step h3 { margin: 1px 0 6px; color: var(--navy); font-size: 16px; }
+    .step p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .step__result { min-width: 134px; padding: 8px 10px; color: var(--success); background: #e9f5ef; border-radius: 7px; font-size: 9px; font-weight: 850; text-align: center; }
+
+    .screen { overflow: hidden; margin-top: 24px; background: white; border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+    .screen__top { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; color: white; background: var(--navy); }
+    .screen__top strong { font-size: 11px; }
+    .screen__dots { color: #8e98b1; letter-spacing: 3px; }
+    .screen__body { padding: 20px; }
+    .screen__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border-top: 3px solid var(--amber); background: var(--line); }
+    .screen__stat { padding: 13px; background: #f9f8f5; }
+    .screen__stat span { color: var(--muted); font-size: 9px; }
+    .screen__stat strong { display: block; margin-top: 2px; color: var(--navy); font-size: 21px; }
+    .screen__task { display: grid; grid-template-columns: 36px 1fr 28px; gap: 10px; align-items: center; margin-top: 10px; padding: 11px; border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 9px; }
+    .screen__task b:first-child { display: grid; width: 34px; height: 34px; place-items: center; color: var(--navy); background: var(--amber); border-radius: 7px; font: 900 9px var(--mono); }
+    .screen__task strong { display: block; color: var(--navy); font-size: 11px; }
+    .screen__task small { color: var(--muted); font-size: 9px; }
+    .screen__check { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--line); border-radius: 50%; }
+
+    .callout { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 17px; margin-top: 18px; padding: 18px; color: white; background: var(--navy); border-radius: 11px; }
+    .callout__rail { background: var(--amber); border-radius: 99px; }
+    .callout h3 { margin: 0 0 6px; font-size: 15px; }
+    .callout p { margin: 0; color: #b9c1d4; font-size: 12px; line-height: 1.55; }
+    .callout--light { color: var(--ink); background: white; border: 1px solid var(--line); }
+    .callout--light p { color: var(--muted); }
+
+    .field-map { display: grid; grid-template-columns: repeat(2, 1fr); gap: 11px; }
+    .field-card { padding: 17px; background: white; border: 1px solid var(--line); border-radius: 10px; }
+    .field-card__label { color: var(--cobalt); font: 850 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .field-card h3 { margin: 9px 0 6px; color: var(--navy); font-size: 14px; }
+    .field-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .field-card code { display: block; margin-top: 10px; padding: 9px 10px; color: var(--navy); background: #f2f0eb; border-radius: 7px; font: 700 10px/1.45 var(--mono); }
+
+    .stage-list { display: grid; gap: 0; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: 13px; }
+    .stage { display: grid; grid-template-columns: 42px 150px minmax(0, 1fr) minmax(180px, .65fr); gap: 14px; align-items: center; padding: 15px 17px; border-bottom: 1px solid var(--line); }
+    .stage:last-child { border-bottom: 0; }
+    .stage__index { display: grid; width: 34px; height: 34px; place-items: center; color: white; background: var(--navy); border-radius: 8px; font: 900 9px var(--mono); }
+    .stage strong { color: var(--navy); font-size: 13px; }
+    .stage p, .stage small { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .stage small { color: var(--cobalt); font-weight: 800; }
+
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .device { padding: 22px; background: white; border: 1px solid var(--line); border-radius: 13px; }
+    .device__icon { display: grid; width: 44px; height: 44px; place-items: center; color: var(--navy); background: var(--amber); border-radius: 10px; font-size: 21px; }
+    .device h3 { margin: 16px 0 8px; color: var(--navy); font-size: 20px; }
+    .device ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .device li + li { margin-top: 6px; }
+
+    .calendar-key { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+    .calendar-key span { display: inline-flex; gap: 7px; align-items: center; color: var(--muted); font-size: 11px; }
+    .calendar-key i { width: 9px; height: 9px; border-radius: 50%; background: var(--cobalt); }
+    .calendar-key span:last-child i { background: var(--amber); }
+    .sync-flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; margin-top: 17px; }
+    .sync-box { padding: 18px; background: white; border: 1px solid var(--line); border-radius: 11px; }
+    .sync-box b { display: block; color: var(--navy); font-size: 13px; }
+    .sync-box small { display: block; margin-top: 5px; color: var(--muted); line-height: 1.45; }
+    .sync-arrow { color: var(--cobalt); font-size: 25px; font-weight: 900; }
+
+    .routine { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .routine__card { position: relative; min-height: 230px; padding: 22px; overflow: hidden; color: white; background: var(--navy); border-radius: 13px; }
+    .routine__card:nth-child(2) { background: var(--cobalt); }
+    .routine__card:nth-child(3) { color: var(--navy); background: var(--amber); }
+    .routine__time { font: 900 10px var(--mono); letter-spacing: .1em; }
+    .routine__card h3 { margin: 35px 0 9px; font-size: 22px; line-height: 1.02; letter-spacing: -.03em; }
+    .routine__card p { margin: 0; color: #bbc3d6; font-size: 11px; line-height: 1.55; }
+    .routine__card:nth-child(2) p { color: #dbe3ff; }
+    .routine__card:nth-child(3) p { color: #5a400c; }
+
+    .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .check { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; padding: 15px; background: white; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+    .check input { position: absolute; opacity: 0; pointer-events: none; }
+    .check__box { display: grid; width: 26px; height: 26px; place-items: center; color: transparent; border: 1px solid #aaa69e; border-radius: 7px; font-weight: 900; }
+    .check input:checked + .check__box { color: white; border-color: var(--cobalt); background: var(--cobalt); }
+    .check strong { display: block; color: var(--navy); font-size: 12px; }
+    .check small { display: block; margin-top: 3px; color: var(--muted); line-height: 1.45; }
+
+    .errors { display: grid; gap: 10px; }
+    details { background: white; border: 1px solid var(--line); border-radius: 10px; }
+    summary { padding: 16px 18px; color: var(--navy); cursor: pointer; font-size: 13px; font-weight: 850; }
+    details p { margin: 0; padding: 0 18px 17px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+    .quick-card { padding: 28px; color: white; background: var(--navy); border-radius: 14px; }
+    .quick-card h3 { margin: 7px 0 20px; font-size: 28px; letter-spacing: -.04em; }
+    .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .quick-item { padding: 14px; border: 1px solid rgba(255,255,255,.13); border-radius: 9px; background: rgba(255,255,255,.055); }
+    .quick-item b { display: block; color: var(--amber); font: 850 9px var(--mono); text-transform: uppercase; }
+    .quick-item span { display: block; margin-top: 6px; color: #d3d8e4; font-size: 11px; line-height: 1.5; }
+    .closing { padding: 38px 0 0; text-align: center; }
+    .closing strong { display: block; color: var(--navy); font-size: clamp(28px, 4vw, 45px); letter-spacing: -.05em; }
+    .closing p { max-width: 580px; margin: 12px auto 24px; color: var(--muted); line-height: 1.6; }
+
+    .mobile-top { display: none; }
+
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .rail { display: none; }
+      .mobile-top { position: sticky; z-index: 30; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: white; background: rgba(11,21,56,.97); backdrop-filter: blur(12px); }
+      .mobile-top .brand { margin: 0; }
+      .mobile-top .brand__mark { width: 32px; height: 32px; }
+      .mobile-top .brand strong { font-size: 14px; }
+      .mobile-top .brand small { font-size: 7px; }
+      .mobile-top .button { padding: 9px 11px; font-size: 10px; }
+      .hero { min-height: auto; padding-top: 54px; }
+      .principles, .routine { grid-template-columns: 1fr; }
+      .stage { grid-template-columns: 40px 130px 1fr; }
+      .stage small { grid-column: 3; }
+    }
+
+    @media (max-width: 650px) {
+      .hero { padding: 45px 18px 42px; }
+      .hero h1 { font-size: 52px; }
+      .hero__lead { font-size: 14px; }
+      .hero__rule { grid-template-columns: 1fr; }
+      .content { padding: 0 18px 70px; }
+      .section { padding: 48px 0; }
+      .section__head { grid-template-columns: 1fr; gap: 15px; }
+      .section__number { width: 50px; height: 50px; }
+      .step { grid-template-columns: 46px 1fr; }
+      .step__number { width: 43px; height: 43px; }
+      .step__result { grid-column: 2; justify-self: start; }
+      .field-map, .device-grid, .checklist, .quick-grid { grid-template-columns: 1fr; }
+      .stage { grid-template-columns: 35px 1fr; gap: 10px; align-items: start; }
+      .stage p, .stage small { grid-column: 2; }
+      .sync-flow { grid-template-columns: 1fr; }
+      .sync-arrow { transform: rotate(90deg); justify-self: center; }
+      .screen__body { padding: 13px; }
+      .screen__stat { padding: 10px 8px; }
+      .screen__task { grid-template-columns: 34px 1fr; }
+      .screen__check { display: none; }
+    }
+
+    @media print {
+      @page { margin: 14mm; }
+      html, body { background: white; }
+      .rail, .mobile-top, .hero__actions, .progress__bar, .closing .button { display: none !important; }
+      .shell { display: block; }
+      .hero { min-height: auto; padding: 28px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .hero h1 { font-size: 50px; }
+      .content { max-width: none; padding: 0; }
+      .section { padding: 30px 0; break-inside: avoid; }
+      .section__head { margin-bottom: 18px; }
+      .screen, .step, .field-card, .stage-list, .device, .routine__card, .quick-card, .callout { break-inside: avoid; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      details p { display: block; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-top">
+    <a class="brand" href="#inicio"><span class="brand__mark">◇</span><span><strong>MINA</strong><small>Guía de operación</small></span></a>
+    <a class="button button--amber" href="./">Abrir CRM</a>
+  </div>
+
+  <div class="shell">
+    <aside class="rail">
+      <a class="brand" href="#inicio"><span class="brand__mark">◇</span><span><strong>MINA</strong><small>Guía de operación</small></span></a>
+      <p class="rail__label">Recorrido</p>
+      <nav class="toc" aria-label="Contenido de la guía">
+        <a href="#principio"><b>01</b> La lógica del sistema</a>
+        <a href="#acceso"><b>02</b> Primer acceso</a>
+        <a href="#hoy"><b>03</b> Pantalla Hoy</a>
+        <a href="#captura"><b>04</b> Registrar un contacto</a>
+        <a href="#etapas"><b>05</b> Etapas del pipeline</a>
+        <a href="#pipeline"><b>06</b> Mover y dar seguimiento</a>
+        <a href="#calendario"><b>07</b> Calendario personal</a>
+        <a href="#contactos"><b>08</b> Buscar y corregir</a>
+        <a href="#rutina"><b>09</b> Rutina recomendada</a>
+        <a href="#campo"><b>10</b> Uso durante prospección</a>
+        <a href="#reglas"><b>11</b> Reglas del equipo</a>
+        <a href="#ayuda"><b>12</b> Problemas comunes</a>
+      </nav>
+      <div class="rail__footer">
+        <div class="progress__meta"><span>Checklist completado</span><strong id="progressLabel">0%</strong></div>
+        <div class="progress__bar"><span id="progressBar"></span></div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero" id="inicio">
+        <div class="hero__content">
+          <p class="eyebrow">Guía ejecutiva · Mario</p>
+          <h1>Un contacto.<br><span>Un siguiente paso.</span></h1>
+          <p class="hero__lead">Esta guía explica cómo usar el CRM compartido de MINA sin experiencia previa. El objetivo no es “alimentar un sistema”: es saber qué relación atender, qué prometimos y quién debe actuar.</p>
+          <div class="hero__actions">
+            <a class="button button--amber" href="./">Abrir el CRM</a>
+            <button class="button button--light" type="button" onclick="window.print()">Imprimir o guardar en PDF</button>
+          </div>
+          <div class="hero__rule"><b>REGLA DE ORO</b><div><strong>Ningún contacto se guarda sin siguiente acción, responsable y fecha.</strong><small>Si esos tres datos están claros, el CRM ya está haciendo su trabajo.</small></div></div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="section" id="principio">
+          <header class="section__head"><span class="section__number">01</span><div><p class="eyebrow">Antes de tocar botones</p><h2>La lógica del sistema</h2><p class="section__intro">El CRM es la memoria compartida de Alejandro y Mario. Debe responder tres preguntas en segundos: ¿con quién estamos hablando?, ¿qué sigue? y ¿quién lo hará?</p></div></header>
+          <div class="principles">
+            <article class="principle"><b>CONTACTO</b><h3>Una sola ficha</h3><p>Toda la información relevante vive en el mismo registro: datos, contexto, etapa y próximo compromiso.</p></article>
+            <article class="principle"><b>ACCIÓN</b><h3>Un verbo concreto</h3><p>“Dar seguimiento” es ambiguo. “Enviar simulador y proponer llamada” permite actuar sin reinterpretar.</p></article>
+            <article class="principle"><b>FECHA</b><h3>Un día real</h3><p>La fecha indica cuándo debe reaparecer la relación. Sin fecha, el contacto puede perderse.</p></article>
+          </div>
+          <div class="callout"><span class="callout__rail"></span><div><h3>El CRM no reemplaza la conversación</h3><p>La organiza. WhatsApp, llamadas y reuniones ocurren fuera; después se actualiza la ficha para que ambos trabajen con el mismo contexto.</p></div></div>
+        </section>
+
+        <section class="section" id="acceso">
+          <header class="section__head"><span class="section__number">02</span><div><p class="eyebrow">Primera vez</p><h2>Entrar y sincronizar</h2><p class="section__intro">El acceso se configura una vez en cada teléfono o computadora. La clave no debe enviarse a prospectos ni guardarse dentro de una ficha.</p></div></header>
+          <div class="steps">
+            <article class="step"><span class="step__number">01</span><div><h3>Abre el enlace oficial</h3><p>Entra desde Safari, Chrome o el navegador que uses normalmente. Guarda el enlace en favoritos o agrégalo a la pantalla de inicio.</p></div><span class="step__result">Resultado: CRM visible</span></article>
+            <article class="step"><span class="step__number">02</span><div><h3>Elige “Mario”</h3><p>En “Quién está usando el CRM”, selecciona tu nombre. Así queda claro quién realizó cada actualización.</p></div><span class="step__result">Resultado: autor identificado</span></article>
+            <article class="step"><span class="step__number">03</span><div><h3>Escribe la clave compartida</h3><p>Solicítala directamente a Alejandro. El sistema la conserva en ese dispositivo; normalmente no tendrás que escribirla otra vez.</p></div><span class="step__result">Resultado: datos sincronizados</span></article>
+          </div>
+          <div class="callout callout--light"><span class="callout__rail"></span><div><h3>¿Cómo sé que funcionó?</h3><p>Verás los prospectos existentes y, en computadora, el indicador “Google Sheets sincronizado”. Si la pantalla pide de nuevo la clave, revisa que no tenga espacios adicionales.</p></div></div>
+        </section>
+
+        <section class="section" id="hoy">
+          <header class="section__head"><span class="section__number">03</span><div><p class="eyebrow">Punto de partida</p><h2>La pantalla “Hoy”</h2><p class="section__intro">Empieza aquí cada jornada. No necesitas revisar todo el pipeline: la pantalla ordena las acciones activas por fecha y destaca la más urgente.</p></div></header>
+          <div class="screen" aria-label="Representación de la pantalla Hoy">
+            <div class="screen__top"><strong>MINA · HOY</strong><span class="screen__dots">•••</span></div>
+            <div class="screen__body">
+              <div class="screen__stats"><div class="screen__stat"><span>Vencidos</span><strong>2</strong></div><div class="screen__stat"><span>Por activar</span><strong>4</strong></div><div class="screen__stat"><span>Activos</span><strong>12</strong></div></div>
+              <div class="screen__task"><b>01</b><div><strong>Enviar información y proponer llamada</strong><small>Contacto · Mario · hoy</small></div><span class="screen__check">✓</span></div>
+              <div class="screen__task" style="border-left-color:#1a40b8"><b style="background:#e7e2d9">02</b><div><strong>Confirmar disponibilidad para reunión</strong><small>Contacto · Ambos · mañana</small></div><span class="screen__check">✓</span></div>
+            </div>
+          </div>
+          <div class="field-map" style="margin-top:18px">
+            <article class="field-card"><span class="field-card__label">Vencidos</span><h3>La fecha ya pasó</h3><p>Toca el contador para ver únicamente esos casos. Resuélvelos o asigna una fecha nueva; no los dejes igual.</p></article>
+            <article class="field-card"><span class="field-card__label">Por activar</span><h3>Aún no existe contacto</h3><p>Son registros en “Por investigar”. Falta preparar el acercamiento o confirmar información.</p></article>
+            <article class="field-card"><span class="field-card__label">Activos</span><h3>Todo lo que sigue abierto</h3><p>Muestra el universo de relaciones que todavía necesitan trabajo.</p></article>
+            <article class="field-card"><span class="field-card__label">✓ Completar</span><h3>La acción ya ocurrió</h3><p>Marca el círculo solo cuando ese seguimiento quedó terminado. Si aún hay algo que hacer, actualiza la ficha primero.</p></article>
+          </div>
+          <div class="callout"><span class="callout__rail"></span><div><h3>“Siguiente mejor acción”</h3><p>El botón abre directamente la ficha más urgente. Realiza la acción, registra el nuevo contexto y define el paso posterior antes de guardar.</p></div></div>
+        </section>
+
+        <section class="section" id="captura">
+          <header class="section__head"><span class="section__number">04</span><div><p class="eyebrow">Crear una relación</p><h2>Registrar un contacto</h2><p class="section__intro">Puedes entrar desde “Capturar”, “Capturar tarjeta” o el botón central del teléfono. La foto ayuda, pero los campos de seguimiento son lo que vuelve útil el registro.</p></div></header>
+          <div class="steps">
+            <article class="step"><span class="step__number">01</span><div><h3>Fotografía la tarjeta</h3><p>Usa buena luz, encuadra la tarjeta completa y revisa que teléfono y correo sean legibles. La foto se guarda como respaldo.</p></div><span class="step__result">Fuente conservada</span></article>
+            <article class="step"><span class="step__number">02</span><div><h3>Captura lo indispensable</h3><p>Nombre, especialidad o actividad, cómo obtuvimos el contacto, etapa actual, responsable, siguiente acción y fecha.</p></div><span class="step__result">Ficha accionable</span></article>
+            <article class="step"><span class="step__number">03</span><div><h3>Escribe contexto útil</h3><p>Resume quién los recibió, qué se conversó, qué mostró interés y qué se prometió. Escribe para que Alejandro pueda continuar sin preguntarte.</p></div><span class="step__result">Continuidad del equipo</span></article>
+            <article class="step"><span class="step__number">04</span><div><h3>Guarda y verifica</h3><p>Al guardar, revisa la captura reciente. Si algo quedó mal, toca “Editar” de inmediato.</p></div><span class="step__result">Seguimiento creado</span></article>
+          </div>
+          <div class="field-map" style="margin-top:22px">
+            <article class="field-card"><span class="field-card__label">Siguiente acción</span><h3>Empieza con un verbo</h3><p>Describe una sola acción observable.</p><code>Enviar simulador y proponer llamada de 15 minutos</code></article>
+            <article class="field-card"><span class="field-card__label">Contexto de campo</span><h3>Registra señales reales</h3><p>Incluye lo que ayudará a personalizar el próximo contacto.</p><code>Recibió la información. Le interesa revisar liquidez antes de agendar.</code></article>
+            <article class="field-card"><span class="field-card__label">Fecha de seguimiento</span><h3>Cuándo actuaremos</h3><p>No es la fecha de captura; es el día en que la acción debe realizarse.</p></article>
+            <article class="field-card"><span class="field-card__label">Cita confirmada</span><h3>Solo con acuerdo explícito</h3><p>Llena fecha y hora cuando la otra persona ya aceptó. Una intención de reunirse todavía no es cita.</p></article>
+          </div>
+        </section>
+
+        <section class="section" id="etapas">
+          <header class="section__head"><span class="section__number">05</span><div><p class="eyebrow">Lenguaje común</p><h2>Qué significa cada etapa</h2><p class="section__intro">La etapa describe el avance real de la relación, no cuánto nos interesa. Muévela únicamente cuando ocurrió el hecho que justifica el cambio.</p></div></header>
+          <div class="stage-list">
+            <article class="stage"><span class="stage__index">01</span><strong>Por investigar</strong><p>Tenemos un nombre o tarjeta, pero falta entender quién es y cómo acercarnos.</p><small>Sale cuando ya existe un enfoque de contacto.</small></article>
+            <article class="stage"><span class="stage__index">02</span><strong>Por contactar</strong><p>Ya sabemos qué queremos decir, pero todavía no se envía mensaje ni se realiza llamada.</p><small>Sale al ejecutar el primer acercamiento.</small></article>
+            <article class="stage"><span class="stage__index">03</span><strong>Contactado</strong><p>El mensaje, llamada o visita ya ocurrió; aún no recibimos una respuesta útil.</p><small>Sale cuando responde o se pausa el intento.</small></article>
+            <article class="stage"><span class="stage__index">04</span><strong>Respondió</strong><p>Hubo respuesta y existe apertura, una pregunta o una conversación por continuar.</p><small>Sale al agendar reunión o definir una oportunidad.</small></article>
+            <article class="stage"><span class="stage__index">05</span><strong>Reunión</strong><p>Existe una cita confirmada o ya se realizó una conversación de diagnóstico.</p><small>Sale al detectar oportunidad o decidir pausa.</small></article>
+            <article class="stage"><span class="stage__index">06</span><strong>Oportunidad</strong><p>Hay necesidad identificada y un siguiente paso comercial concreto.</p><small>Permanece mientras se trabaja la decisión.</small></article>
+            <article class="stage"><span class="stage__index">07</span><strong>Pausado</strong><p>No se trabajará ahora: no hay interés, no es el momento o se agotó el seguimiento.</p><small>Registra el motivo y una fecha futura si aplica.</small></article>
+          </div>
+        </section>
+
+        <section class="section" id="pipeline">
+          <header class="section__head"><span class="section__number">06</span><div><p class="eyebrow">Seguimiento visual</p><h2>Mover y actualizar</h2><p class="section__intro">El pipeline muestra dónde está cada relación. Mover una tarjeta cambia la etapa; editar la ficha cambia el compromiso, responsable, fecha y contexto.</p></div></header>
+          <div class="device-grid">
+            <article class="device"><span class="device__icon">▤</span><h3>En computadora</h3><ol><li>Abre “Pipeline”.</li><li>Arrastra la tarjeta a la columna correcta.</li><li>Toca “Editar” para cambiar la siguiente acción.</li><li>Guarda la nueva fecha y el contexto.</li></ol></article>
+            <article class="device"><span class="device__icon">▯</span><h3>En teléfono</h3><ol><li>Usa las pestañas superiores para cambiar de etapa.</li><li>Desliza la tarjeta a la derecha para avanzar o a la izquierda para regresar.</li><li>Si prefieres precisión, toca “Mover de etapa”.</li><li>Entra a “Editar ficha” para actualizar el seguimiento.</li></ol></article>
+          </div>
+          <div class="callout callout--light"><span class="callout__rail"></span><div><h3>Mover no es actualizar</h3><p>Después de cambiar de etapa, revisa siempre “Siguiente acción” y “Fecha de seguimiento”. Una tarjeta bien colocada, pero sin compromiso actualizado, sigue incompleta.</p></div></div>
+          <div class="field-map" style="margin-top:18px">
+            <article class="field-card"><span class="field-card__label">Prospectos</span><h3>Vista completa</h3><p>Muestra todas las relaciones activas distribuidas por etapa.</p></article>
+            <article class="field-card"><span class="field-card__label">Sin contacto</span><h3>Falta activar</h3><p>Filtra los casos en “Por investigar” y “Por contactar”.</p></article>
+            <article class="field-card"><span class="field-card__label">Vencidos</span><h3>Requieren decisión</h3><p>La fecha de seguimiento ya pasó. Atiende, reprograma o pausa.</p></article>
+            <article class="field-card"><span class="field-card__label">Quitar filtro</span><h3>Regresa al tablero</h3><p>Recupera la vista completa después de revisar un grupo.</p></article>
+          </div>
+        </section>
+
+        <section class="section" id="calendario">
+          <header class="section__head"><span class="section__number">07</span><div><p class="eyebrow">Tiempo y compromisos</p><h2>Calendario personal</h2><p class="section__intro">El calendario del CRM se alimenta con las fechas de seguimiento y las citas confirmadas de cada ficha.</p></div></header>
+          <div class="calendar-key"><span><i></i> Seguimiento</span><span><i></i> Cita confirmada</span></div>
+          <div class="steps">
+            <article class="step"><span class="step__number">01</span><div><h3>Selecciona un día</h3><p>En el calendario mensual, toca la fecha. Debajo aparecerá la agenda detallada de ese día.</p></div><span class="step__result">Agenda del día</span></article>
+            <article class="step"><span class="step__number">02</span><div><h3>Añade un evento a Google Calendar</h3><p>Toca “Añadir a Google Calendar”, revisa los datos en la ventana de Google y guarda el evento.</p></div><span class="step__result">Evento personal</span></article>
+            <article class="step"><span class="step__number">03</span><div><h3>Exporta el mes si lo necesitas</h3><p>“Exportar mes” descarga un archivo .ics con todos los eventos visibles. Ábrelo para importarlo en una aplicación de calendario compatible.</p></div><span class="step__result">Mes exportado</span></article>
+          </div>
+          <div class="sync-flow"><div class="sync-box"><b>MINA CRM</b><small>Es la fuente del seguimiento y del responsable.</small></div><span class="sync-arrow">→</span><div class="sync-box"><b>Tu calendario personal</b><small>Recibe el evento cuando tú confirmas “Guardar”.</small></div></div>
+          <div class="callout"><span class="callout__rail"></span><div><h3>Importante: no es sincronización automática de ida y vuelta</h3><p>Si cambias una fecha únicamente en Google Calendar, el CRM no se actualiza solo. Modifica primero la ficha en MINA y vuelve a añadir o ajustar el evento personal.</p></div></div>
+        </section>
+
+        <section class="section" id="contactos">
+          <header class="section__head"><span class="section__number">08</span><div><p class="eyebrow">Directorio compartido</p><h2>Buscar y corregir</h2><p class="section__intro">“Contactos” sirve para encontrar rápidamente una ficha por nombre, especialidad, responsable o fuente.</p></div></header>
+          <div class="steps">
+            <article class="step"><span class="step__number">01</span><div><h3>Busca antes de crear</h3><p>Escribe parte del nombre o especialidad. Así evitas registrar dos veces a la misma persona.</p></div><span class="step__result">Sin duplicados</span></article>
+            <article class="step"><span class="step__number">02</span><div><h3>Usa “Editar” para corregir</h3><p>Actualiza datos, contexto, etapa, responsable y siguiente acción desde la misma ficha.</p></div><span class="step__result">Historial vigente</span></article>
+            <article class="step"><span class="step__number">03</span><div><h3>Elimina solo un error real</h3><p>La “×” borra el registro y no se puede deshacer. Para un prospecto sin interés, usa “Pausado”; no lo elimines.</p></div><span class="step__result">Información preservada</span></article>
+          </div>
+        </section>
+
+        <section class="section" id="rutina">
+          <header class="section__head"><span class="section__number">09</span><div><p class="eyebrow">Cinco minutos bien usados</p><h2>Rutina recomendada</h2><p class="section__intro">El sistema se mantiene útil con tres momentos breves. La disciplina importa más que capturar muchos datos.</p></div></header>
+          <div class="routine">
+            <article class="routine__card"><span class="routine__time">INICIO · 3 MIN</span><h3>Decidir el día</h3><p>Abre “Hoy”, atiende vencidos y confirma cuál es la siguiente mejor acción.</p></article>
+            <article class="routine__card"><span class="routine__time">DESPUÉS DE CONTACTO · 2 MIN</span><h3>Actualizar la realidad</h3><p>Registra la respuesta, mueve la etapa y define la siguiente acción con fecha.</p></article>
+            <article class="routine__card"><span class="routine__time">CIERRE · 3 MIN</span><h3>Dejar continuidad</h3><p>Revisa que nada realizado conserve una fecha vencida y que Alejandro pueda entender lo ocurrido.</p></article>
+          </div>
+        </section>
+
+        <section class="section" id="campo">
+          <header class="section__head"><span class="section__number">10</span><div><p class="eyebrow">Teléfono en mano</p><h2>Durante la prospección</h2><p class="section__intro">En campo, captura lo suficiente para no olvidar; completa los detalles al terminar el recorrido. No interrumpas una buena conversación por llenar campos.</p></div></header>
+          <div class="checklist">
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Foto legible</strong><small>La tarjeta completa está dentro del encuadre.</small></span></label>
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Nombre confirmado</strong><small>No dependas solo de interpretar la fotografía.</small></span></label>
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Origen correcto</strong><small>Quién entregó la tarjeta o cómo se obtuvo.</small></span></label>
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Señal relevante</strong><small>Qué dijo, preguntó o mostró interés.</small></span></label>
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Responsable definido</strong><small>Mario, Alejandro o Ambos.</small></span></label>
+            <label class="check"><input class="progress-check" type="checkbox"><span class="check__box">✓</span><span><strong>Siguiente acción con fecha</strong><small>Qué haremos y cuándo reaparecerá.</small></span></label>
+          </div>
+          <div class="callout callout--light"><span class="callout__rail"></span><div><h3>Captura rápida, cierre cuidadoso</h3><p>Si vas caminando, registra foto, nombre, responsable y una nota corta. Antes de terminar el día, completa el contexto y corrige la siguiente acción.</p></div></div>
+        </section>
+
+        <section class="section" id="reglas">
+          <header class="section__head"><span class="section__number">11</span><div><p class="eyebrow">Trabajo entre dos</p><h2>Reglas del equipo</h2><p class="section__intro">Estas convenciones evitan mensajes duplicados, seguimientos contradictorios y contactos que nadie asume.</p></div></header>
+          <div class="quick-card">
+            <p class="eyebrow" style="color:#f59e0b">Acuerdo operativo</p><h3>Una sola fuente de verdad</h3>
+            <div class="quick-grid">
+              <div class="quick-item"><b>01 · Antes de contactar</b><span>Revisa la ficha para confirmar contexto, responsable y último compromiso.</span></div>
+              <div class="quick-item"><b>02 · Después de contactar</b><span>Actualiza la ficha el mismo día, aunque la respuesta haya sido negativa.</span></div>
+              <div class="quick-item"><b>03 · Responsable “Ambos”</b><span>Úsalo solo si existe una acción conjunta. Si una persona ejecuta, asigna su nombre.</span></div>
+              <div class="quick-item"><b>04 · Cambios importantes</b><span>Si cambia la estrategia o existe una cita, avisa al otro y deja el dato en el CRM.</span></div>
+              <div class="quick-item"><b>05 · Sin respuesta</b><span>No crees otro registro. Actualiza el existente y fija un nuevo intento o pausa.</span></div>
+              <div class="quick-item"><b>06 · Datos sensibles</b><span>Registra solo información necesaria para la relación comercial y evita datos personales innecesarios.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="ayuda">
+          <header class="section__head"><span class="section__number">12</span><div><p class="eyebrow">Resolver sin detenerse</p><h2>Problemas comunes</h2><p class="section__intro">La mayoría se resuelve revisando acceso, conexión y la ficha del contacto.</p></div></header>
+          <div class="errors">
+            <details><summary>El sistema vuelve a pedirme la clave</summary><p>Selecciona “Mario”, escribe nuevamente la clave compartida y confirma. Si cambiaste de navegador, usas modo privado o borraste los datos del sitio, es normal que la solicite otra vez.</p></details>
+            <details><summary>No veo un cambio que hizo Alejandro</summary><p>Verifica que tengas conexión a internet y vuelve a cargar la página. Asegúrate de que ambos estén usando el mismo enlace oficial.</p></details>
+            <details><summary>Guardé una fecha equivocada</summary><p>Busca el contacto, toca “Editar”, corrige “Fecha de seguimiento” o “Cita confirmada” y guarda. Si ya lo añadiste a Google Calendar, ajusta también ese evento.</p></details>
+            <details><summary>Registré dos veces al mismo contacto</summary><p>Conserva la ficha que tenga el contexto más completo. Copia cualquier dato útil desde la duplicada y después elimina solo el registro sobrante.</p></details>
+            <details><summary>Una tarjeta aparece como vencida</summary><p>Significa que su fecha de seguimiento ya pasó y continúa activa. Ejecuta la acción, fija una nueva fecha o cambia la etapa a “Pausado” si no se trabajará ahora.</p></details>
+            <details><summary>El evento no apareció automáticamente en Google Calendar</summary><p>Debes seleccionar el día en el CRM, tocar “Añadir a Google Calendar” y confirmar “Guardar” en Google. El CRM prepara el evento, pero no lo guarda sin tu confirmación.</p></details>
+          </div>
+
+          <div class="closing">
+            <strong>El sistema está al día cuando<br>el siguiente paso está claro.</strong>
+            <p>No necesitas aprender “a usar un CRM”. Solo mantener cada relación con contexto, responsable, acción y fecha.</p>
+            <a class="button button--amber" href="./">Ir al CRM de MINA</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const checks = [...document.querySelectorAll('.progress-check')];
+    const progressBar = document.querySelector('#progressBar');
+    const progressLabel = document.querySelector('#progressLabel');
+    const storageKey = 'mina-guide-mario-checks';
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      checks.forEach((check, index) => { check.checked = Boolean(saved[index]); });
+    } catch {}
+
+    function updateProgress() {
+      const completed = checks.filter(check => check.checked).length;
+      const percent = checks.length ? Math.round((completed / checks.length) * 100) : 0;
+      progressBar.style.width = `${percent}%`;
+      progressLabel.textContent = `${percent}%`;
+      localStorage.setItem(storageKey, JSON.stringify(checks.map(check => check.checked)));
+    }
+
+    checks.forEach(check => check.addEventListener('change', updateProgress));
+    updateProgress();
+
+    const sections = [...document.querySelectorAll('.section')];
+    const tocLinks = [...document.querySelectorAll('.toc a')];
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      tocLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`));
+    }, { rootMargin: '-20% 0px -65% 0px', threshold: [0, .2, .5] });
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
