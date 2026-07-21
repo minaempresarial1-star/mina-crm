@@ -1,5 +1,5 @@
-const CACHE = 'mina-operacion-v11';
-const ASSETS = ['./', './index.html', './styles.css', './src/app.js', './src/store.js', './src/config.js', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'mina-operacion-v12';
+const ASSETS = ['./', './index.html', './guia-mario.html', './styles.css', './src/app.js', './src/store.js', './src/config.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
