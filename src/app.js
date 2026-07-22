@@ -135,7 +135,10 @@ async function bindPhotoImages() {
 }
 
 async function refresh() {
-  state.prospects = await store.all();
+  // allowCache: en campo (torre médica sin señal) muestra el último snapshot
+  // guardado en vez de fallar. El store solo usa caché ante errores de red,
+  // nunca ante errores de autenticación.
+  state.prospects = await store.all({ allowCache: true });
   render();
 }
 
@@ -158,7 +161,7 @@ function sidebar() {
   return `<aside class="sidebar">
     <div class="brand"><span class="brand__mark">◇</span><span><strong>MINA</strong><small>Operación patrimonial</small></span></div>
     <nav class="nav" aria-label="Principal">${items.map(([view, icon, label]) => `<button data-view="${view}" class="${state.view === view ? 'active' : ''}"><span class="nav__icon">${icon}</span>${label}</button>`).join('')}</nav>
-    <div class="team-card"><p class="eyebrow" style="color:#f59e0b">Equipo activo</p><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="avatars"><span class="avatar">AH</span><span class="avatar mario">MA</span></div><span class="micro" style="color:#aeb6ca">2 responsables</span></div><span class="sync-status">Google Sheets sincronizado</span></div>
+    <div class="team-card"><p class="eyebrow" style="color:#f59e0b">Equipo activo</p><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="avatars"><span class="avatar">AH</span><span class="avatar mario">MA</span></div><span class="micro" style="color:#aeb6ca">2 responsables</span></div><span class="sync-status"${navigator.onLine ? '' : ' style="color:var(--amber)"'}>${navigator.onLine ? 'Google Sheets sincronizado' : 'Sin conexión · datos guardados'}</span></div>
   </aside>`;
 }
 
@@ -180,7 +183,9 @@ function emptyState(title, body, action = true) {
 function todayView() {
   const active = state.prospects.filter(p => !p.completed).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
   const overdue = active.filter(isOverdue).length;
-  const unactivated = active.filter(p => p.stage === STAGES[0]).length;
+  // Debe coincidir con el filtro 'uncontacted' que abre este stat (etapas 0 y 1),
+  // no solo 'Por investigar'; antes el número no cuadraba con el tablero filtrado.
+  const unactivated = active.filter(isUncontacted).length;
   const tasks = active.slice(0, 8);
   return `<main class="page">
     <header class="page-header"><div><p class="eyebrow">Operación compartida</p><h1>Cada contacto necesita<br><span>un siguiente paso.</span></h1></div><div class="header-actions"><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
@@ -695,6 +700,8 @@ prospectDialog.addEventListener('click', event => { if (event.target === prospec
 moveDialog.addEventListener('click', event => { if (event.target === moveDialog) closeMoveDialog(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeProspectDialog(); closeMoveDialog(); } });
 window.addEventListener('popstate', () => { state.view = new URLSearchParams(location.search).get('view') || 'today'; render(); });
+window.addEventListener('online', () => render());
+window.addEventListener('offline', () => render());
 window.addEventListener('unhandledrejection', event => {
   const error = event.reason instanceof Error ? event.reason : new Error('No fue posible completar la operación.');
   event.preventDefault();

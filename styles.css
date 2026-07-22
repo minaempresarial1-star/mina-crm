@@ -1,3 +1,15 @@
+/* Manrope auto-hospedado (subconjunto latino, eje variable 400–800).
+   Antes se declaraba Manrope sin cargarla: en equipos sin la fuente
+   instalada (p. ej. el iPhone de Mario) caía al sistema. Ahora se sirve
+   desde el repo y funciona offline con el service worker. */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('fonts/manrope-latin.woff2') format('woff2');
+}
+
 :root {
   --navy: #0b1538;
   --navy-2: #111d49;
