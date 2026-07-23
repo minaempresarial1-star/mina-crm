@@ -14,7 +14,7 @@ const RESOURCES = [
   {
     category: 'Para enviar al prospecto',
     items: [
-      { title: 'Información de primer contacto (en frío)', desc: 'Página breve para presentar la propuesta a un prospecto que aún no conoces: qué hacemos, cómo trabajamos y quiénes nos regulan. Cierra invitando al simulador base. Se envía como link.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/primer-contacto.html', tag: 'En vivo' },
+      { title: 'Información de primer contacto (en frío)', desc: 'Página breve para presentar la propuesta a un prospecto que aún no conoces: qué hacemos, cómo trabajamos y quiénes nos regulan. Cierra invitando al simulador base. Se envía como link.', url: 'https://minaempresarial1-star.github.io/gestion-patrimonial/', tag: 'En vivo' },
       { title: 'Simulador base · Escenario patrimonial', desc: 'Simulador que el prospecto usa por su cuenta, sin datos personales. Es el destino del botón de la página de primer contacto.', url: 'https://minaempresarial1-star.github.io/escenario-patrimonial-mina/', tag: 'En vivo' },
       { title: 'Página de seguimiento', desc: 'Pieza de seguimiento posterior a una conversación exploratoria; refuerza el interés sin recomendar producto.', url: '', tag: 'En preparación' }
     ]
