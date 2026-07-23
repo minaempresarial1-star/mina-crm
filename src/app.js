@@ -22,7 +22,7 @@ const RESOURCES = [
   {
     category: 'Cierre',
     items: [
-      { title: 'Arquitectura Personalizada', desc: 'Presentación de cierre reactiva (OptiMaxx Plus): estrategia, simulación, bono y liquidez. Se personaliza por cliente.', url: '', tag: 'Local' }
+      { title: 'Arquitectura Personalizada', desc: 'Presentación de cierre reactiva (OptiMaxx Plus): estrategia, simulación, bono y liquidez. Para segundas citas de cierre. Se personaliza por cliente editando el bloque CFG.', url: 'https://minaempresarial1-star.github.io/arquitectura-cierre/', tag: 'En vivo' }
     ]
   },
   {
