@@ -1,4 +1,4 @@
-const CACHE = 'mina-operacion-v14';
+const CACHE = 'mina-operacion-v15';
 const ASSETS = ['./', './index.html', './guia-mario.html', './styles.css', './src/app.js', './src/store.js', './src/config.js', './manifest.webmanifest', './icon.svg', './fonts/manrope-latin.woff2'];
 
 self.addEventListener('install', event => {

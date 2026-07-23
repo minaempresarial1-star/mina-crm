@@ -1,7 +1,37 @@
 import { clearConnectionSettings, createProspectStore, getConnectionSettings, saveConnectionSettings } from './store.js';
 
 const STAGES = ['Por investigar', 'Por contactar', 'Contactado', 'Respondió', 'Reunión', 'Oportunidad', 'Pausado'];
-const store = createProspectStore();
+
+// Biblioteca de recursos (herramientas ya diseñadas). Editar aquí para agregar más.
+const RESOURCES = [
+  {
+    category: 'Prospección en persona',
+    items: [
+      { title: 'Herramienta de reunión · Médicos', desc: 'Ciclo completo Apertura · Cuaje · Cierre: calculador de fuga patrimonial, checklist de blindaje, plan personalizado y cierre.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/medicos.html', tag: 'En vivo' },
+      { title: 'Simulador “Dos Actos”', desc: 'Simulador patrimonial general para mostrar en vivo el costo de dejar el dinero estancado.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/simulador.html', tag: 'En vivo' }
+    ]
+  },
+  {
+    category: 'Para enviar al prospecto',
+    items: [
+      { title: 'Información de primer contacto (en frío)', desc: 'Página breve para presentar la propuesta a un prospecto que aún no conoces y despertar interés hacia una conversación. Versión PDF para enviar por WhatsApp.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/primer-contacto.html', tag: 'En vivo' },
+      { title: 'Página de seguimiento', desc: 'Pieza de seguimiento posterior a una conversación exploratoria; refuerza el interés sin recomendar producto.', url: '', tag: 'En preparación' }
+    ]
+  },
+  {
+    category: 'Cierre',
+    items: [
+      { title: 'Arquitectura Personalizada', desc: 'Presentación de cierre reactiva (OptiMaxx Plus): estrategia, simulación, bono y liquidez. Se personaliza por cliente.', url: '', tag: 'Local' }
+    ]
+  },
+  {
+    category: 'Operación del CRM',
+    items: [
+      { title: 'Guía de uso para Mario', desc: 'Onboarding y operación diaria del CRM, responsive e imprimible.', url: 'https://minaempresarial1-star.github.io/mina-crm/guia-mario.html', tag: 'En vivo' }
+    ]
+  }
+];
+let store = createProspectStore();
 const app = document.querySelector('#app');
 const prospectDialog = document.querySelector('#prospectDialog');
 const moveDialog = document.querySelector('#moveDialog');
@@ -13,6 +43,7 @@ const toast = document.querySelector('#toast');
 const connectionDialog = document.querySelector('#connectionDialog');
 const connectionForm = document.querySelector('#connectionForm');
 const connectionError = document.querySelector('#connectionError');
+const summaryDialog = document.querySelector('#summaryDialog');
 
 const state = {
   prospects: [],
@@ -28,6 +59,7 @@ const state = {
   newId: null,
   saving: false,
   moveId: null,
+  summaryId: null,
   objectUrls: []
 };
 
@@ -80,6 +112,44 @@ function defaultDueDate() {
 function formatDate(dateString) {
   if (!dateString) return 'Sin fecha';
   return new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short' }).format(new Date(`${dateString}T12:00:00`));
+}
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  return new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+}
+
+// Modo demo local (solo con ?demo=1): store en memoria con datos de ejemplo,
+// para previsualizar la interfaz sin backend ni clave. No afecta producción.
+function createDemoStore() {
+  const nowIso = () => new Date().toISOString();
+  const day = offset => { const d = new Date(); d.setDate(d.getDate() + offset); return dateInputValue(d); };
+  const at = (offset, hhmm) => `${day(offset)}T${hhmm}`;
+  let data = [
+    { id: 'd1', name: 'Dra. Yamel del Castillo', specialty: 'Dermatología', organization: 'Clínica Amore', stage: 'Contactado', source: 'Torre médica', owner: 'Mario', phone: '2213456789', email: 'yamel@example.mx', location: 'Angelópolis', nextAction: 'Enviar simulador y proponer llamada de 15 minutos', dueDate: day(-2), appointmentAt: '', context: 'Interesada; estaba ocupada en consulta.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 2 },
+    { id: 'd2', name: 'Dr. Agustín Gutiérrez', specialty: 'Pediatría y neonatología', organization: 'Torres Médicas', stage: 'Respondió', source: 'Referido', owner: 'Alejandro', phone: '2217654321', email: '', location: 'Puebla', nextAction: 'Confirmar segunda reunión de diagnóstico', dueDate: day(1), appointmentAt: at(1, '17:30'), context: 'Quiere emprender a futuro; ya tiene un seguro.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 3 },
+    { id: 'd3', name: 'Dr. Osiris Melchor', specialty: 'Cardiología', organization: 'Consultorio propio', stage: 'Reunión', source: 'Prospección en frío', owner: 'Mario', phone: '2211112233', email: '', location: 'Angelópolis', nextAction: 'Presentar arquitectura personalizada y cerrar arranque', dueDate: day(2), appointmentAt: at(2, '10:00'), context: 'Quiere empezar con poco; prioriza liquidez.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 1 },
+    { id: 'd4', name: 'Dr. Alberto Pulido', specialty: 'Traumatología', organization: 'Clínica Amore', stage: 'Por contactar', source: 'Torre médica', owner: 'Mario', phone: '2214445566', email: '', location: 'Puebla', nextAction: 'Enviar mensaje que despierte interés por WhatsApp', dueDate: day(0), appointmentAt: '', context: 'Pidió información; falta mensaje que genere cita.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 1 },
+    { id: 'd5', name: 'Dr. Gustavo Minutti', specialty: 'Gastroenterología', organization: 'Consultorio propio', stage: 'Pausado', source: 'Referido', owner: 'Alejandro', phone: '', email: '', location: 'Puebla', nextAction: 'Revisar en 60 días con contenido de valor', dueDate: day(58), appointmentAt: '', context: 'Interés alto, urgencia baja; invierte en su consultorio.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 4 },
+    { id: 'd6', name: 'Dra. Ana Luzuriaga', specialty: 'Ginecología', organization: 'Hospital Ángeles', stage: 'Por investigar', source: 'Prospección en frío', owner: 'Alejandro', phone: '', email: '', location: 'Angelópolis', nextAction: 'Investigar perfil y preparar acercamiento', dueDate: day(0), appointmentAt: '', context: '', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 1 },
+    { id: 'd7', name: 'Dr. Tomás Herrera Arzola', specialty: 'Cardiología', organization: 'Torres Médicas', stage: 'Oportunidad', source: 'Referido', owner: 'Mario', phone: '2219998877', email: 'herrera@example.mx', location: 'Angelópolis', nextAction: 'Preparar comparativo de escenarios patrimoniales', dueDate: day(-1), appointmentAt: '', context: 'Ticket alto; analítico y ocupado.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 5 },
+    { id: 'd8', name: 'Dr. Romero Galicia', specialty: 'Medicina interna', organization: 'Consultorio propio', stage: 'Por contactar', source: 'Referido', owner: 'Alejandro', phone: '2213334455', email: '', location: 'Puebla', nextAction: 'Proponer café de 20 minutos', dueDate: day(3), appointmentAt: '', context: 'Entrada más fácil; pidió fondo educativo.', completed: false, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 1 },
+    { id: 'd9', name: 'Dra. Sofía Prieto', specialty: 'Endocrinología', organization: 'Hospital Ángeles', stage: 'Contactado', source: 'Torre médica', owner: 'Mario', phone: '2216667788', email: '', location: 'Angelópolis', nextAction: 'Primer contacto realizado', dueDate: day(-5), appointmentAt: '', context: 'Seguimiento cerrado por ahora.', completed: true, photoId: '', createdAt: nowIso(), updatedAt: nowIso(), version: 2 }
+  ];
+  const clone = () => data.map(p => ({ ...p }));
+  return {
+    async all() { return clone(); },
+    async save(prospect) {
+      const rec = { ...prospect }; delete rec.photo;
+      const i = data.findIndex(x => x.id === rec.id);
+      if (i >= 0) { rec.createdAt = data[i].createdAt; rec.updatedAt = nowIso(); rec.version = (data[i].version || 0) + 1; rec.completed = Boolean(rec.completed); data[i] = rec; }
+      else { rec.id = rec.id || 'demo-' + Date.now(); rec.createdAt = nowIso(); rec.updatedAt = nowIso(); rec.version = 1; rec.completed = Boolean(rec.completed); data.push(rec); }
+      return { ...rec };
+    },
+    async update(id, changes) { const cur = data.find(x => x.id === id); if (!cur) throw new Error('Prospecto no encontrado'); return this.save({ ...cur, ...changes, id }); },
+    async remove(id) { data = data.filter(x => x.id !== id); return id; },
+    async photo() { return null; }
+  };
 }
 
 function isOverdue(prospect) {
@@ -189,7 +259,8 @@ function sidebar() {
     ['pipeline', '↗', 'Pipeline'],
     ['capture', '▣', 'Capturar'],
     ['calendar', '□', 'Calendario'],
-    ['contacts', '♙', 'Contactos']
+    ['contacts', '♙', 'Contactos'],
+    ['resources', '▤', 'Recursos']
   ];
   return `<aside class="sidebar">
     <div class="brand"><span class="brand__mark">◇</span><span><strong>MINA</strong><small>Operación patrimonial</small></span></div>
@@ -206,6 +277,7 @@ function mobileNav() {
     <button class="capture" data-open-capture><span>＋</span>Capturar</button>
     ${item('calendar', '□', 'Agenda')}
     ${item('contacts', '♙', 'Contactos')}
+    ${item('resources', '▤', 'Recursos')}
   </nav>`;
 }
 
@@ -222,16 +294,16 @@ function todayView() {
   const tasks = active.slice(0, 8);
   return `<main class="page">
     <header class="page-header"><div><p class="eyebrow">Operación compartida</p><h1>Cada contacto necesita<br><span>un siguiente paso.</span></h1></div><div class="header-actions"><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
-    <section class="stats" aria-label="Filtros rápidos"><button class="stat" data-dashboard-filter="overdue"><span>Vencidos</span><strong>${overdue}</strong><small>Ver y resolver</small></button><button class="stat" data-dashboard-filter="uncontacted"><span>Por activar</span><strong>${unactivated}</strong><small>Ver sin contacto</small></button><button class="stat" data-dashboard-filter="all"><span>Activos</span><strong>${active.length}</strong><small>Ver pipeline</small></button></section>
+    <section class="stats" aria-label="Filtros rápidos"><button class="stat" data-dashboard-filter="overdue"><span>Vencidos</span><strong>${overdue}</strong><small>Seguimientos con fecha ya pasada</small></button><button class="stat" data-dashboard-filter="uncontacted"><span>Sin contactar</span><strong>${unactivated}</strong><small>Aún sin primer acercamiento</small></button><button class="stat" data-dashboard-filter="all"><span>En seguimiento</span><strong>${active.length}</strong><small>Relaciones activas en el pipeline</small></button></section>
     <div class="content-grid"><section><div class="section-head"><div><p class="eyebrow">Agenda compartida</p><h2>Próximas acciones</h2></div></div>
-      <div class="task-list">${tasks.length ? tasks.map((p, index) => `<article class="task ${isOverdue(p) ? 'overdue' : ''}"><span class="task__number">${String(index + 1).padStart(2, '0')}</span><div><h3>${escapeHtml(p.nextAction)}</h3><p>${escapeHtml(p.name)} · ${escapeHtml(p.specialty)} · ${escapeHtml(p.owner)} · ${formatDate(p.dueDate)}</p></div><button class="task__complete" data-complete="${p.id}" aria-label="Completar seguimiento">✓</button></article>`).join('') : emptyState('La agenda está vacía', 'Captura una tarjeta para crear el primer seguimiento.')}</div>
+      <div class="task-list">${tasks.length ? tasks.map((p, index) => `<article class="task is-clickable ${isOverdue(p) ? 'overdue' : ''}" data-summary="${p.id}"><span class="task__number">${String(index + 1).padStart(2, '0')}</span><div><h3>${escapeHtml(p.nextAction)}</h3><p>${escapeHtml(p.name)} · ${escapeHtml(p.specialty)} · ${escapeHtml(p.owner)} · ${formatDate(p.dueDate)}</p></div><button class="task__complete" data-complete="${p.id}" aria-label="Completar seguimiento">✓</button></article>`).join('') : emptyState('La agenda está vacía', 'Captura una tarjeta para crear el primer seguimiento.')}</div>
     </section><aside><div class="focus-panel"><p class="eyebrow" style="color:#f59e0b">Siguiente mejor acción</p><h3>${active.length ? escapeHtml(active[0].nextAction) : 'Registrar lo obtenido en campo'}</h3><p>${active.length ? `${escapeHtml(active[0].name)} · ${escapeHtml(active[0].owner)} · ${formatDate(active[0].dueDate)}. Abre su ficha para trabajar esta acción y dejar el seguimiento actualizado.` : 'Cada tarjeta puede convertirse inmediatamente en responsable, contexto y fecha.'}</p>${active.length ? `<button class="button button--amber" data-focus-prospect="${active[0].id}">Atender seguimiento de ${escapeHtml(active[0].name)}</button>` : '<button class="button button--amber" data-open-capture>Registrar una tarjeta</button>'}</div></aside></div>
   </main>`;
 }
 
 function leadCard(prospect, { mobile = false } = {}) {
   const overdue = isOverdue(prospect);
-  return `<article class="lead-card ${overdue ? 'stale' : ''}" data-lead-id="${prospect.id}" ${mobile ? 'data-swipe-card' : 'data-desktop-drag'}>
+  return `<article class="lead-card is-clickable ${overdue ? 'stale' : ''}" data-lead-id="${prospect.id}" data-summary="${prospect.id}" ${mobile ? 'data-swipe-card' : 'data-desktop-drag'}>
     ${mobile ? '' : '<span class="drag-hint" aria-hidden="true">⠿</span>'}
     <span class="pill ${overdue ? 'amber' : ''}">${escapeHtml(prospect.source)}</span>
     <h3>${escapeHtml(prospect.name)}</h3>
@@ -252,13 +324,13 @@ function pipelineView() {
   }
   const mobileProspects = visible.filter(p => p.stage === state.mobileStage);
   const metrics = [
-    ['all', 'Prospectos', active.length],
-    ['uncontacted', 'Sin contacto', active.filter(isUncontacted).length],
-    ['overdue', 'Vencidos', active.filter(isOverdue).length]
+    ['all', 'En seguimiento', active.length, 'Todo el pipeline activo'],
+    ['uncontacted', 'Sin contactar', active.filter(isUncontacted).length, 'Sin primer acercamiento'],
+    ['overdue', 'Vencidos', active.filter(isOverdue).length, 'Fecha ya pasó']
   ];
   return `<main class="page">
     <header class="page-header"><div><p class="eyebrow">MINA · Operación patrimonial</p><h1 style="font-size:34px">Pipeline ejecutivo</h1></div><div class="header-actions"><button class="button button--primary" data-open-capture>＋ Capturar tarjeta</button></div></header>
-    <section class="pipeline-hero"><div><p class="eyebrow" style="color:#f59e0b">Seguimiento comercial</p><h1>De contacto en contacto,<br><span>ningún compromiso se pierde.</span></h1></div>${metrics.map(([key, label, count]) => `<button class="pipeline-metric ${state.pipelineFilter === key ? 'active' : ''}" data-pipeline-filter="${key}" aria-pressed="${state.pipelineFilter === key}"><span class="micro">${label}</span><strong>${count}</strong><small>${key === 'overdue' ? '¿Qué significa?' : 'Filtrar tablero'}</small></button>`).join('')}</section>
+    <section class="pipeline-hero"><div><p class="eyebrow" style="color:#f59e0b">Seguimiento comercial</p><h1>De contacto en contacto,<br><span>ningún compromiso se pierde.</span></h1></div>${metrics.map(([key, label, count, desc]) => `<button class="pipeline-metric ${state.pipelineFilter === key ? 'active' : ''}" data-pipeline-filter="${key}" aria-pressed="${state.pipelineFilter === key}"><span class="micro">${label}</span><strong>${count}</strong><small>${desc}</small></button>`).join('')}</section>
     <section class="filter-explainer" aria-live="polite"><div><span class="filter-explainer__count">${visible.length}</span><div><strong>${filter.label}</strong><p>${filter.description}</p></div></div>${state.pipelineFilter !== 'all' ? '<button class="button button--quiet" data-pipeline-filter="all">Quitar filtro</button>' : ''}</section>
     <div class="board-wrap"><section class="board">${STAGES.map((stage, index) => `<div class="pipeline-column" data-stage="${stage}"><header class="pipeline-column__head"><h2>${stage}</h2><span class="stage-count">${String(index + 1).padStart(2, '0')} · ${visible.filter(p => p.stage === stage).length}</span></header>${visible.filter(p => p.stage === stage).map(p => leadCard(p)).join('') || '<p class="micro muted" style="padding:8px">No hay prospectos con este filtro.</p>'}</div>`).join('')}</section></div>
     <section class="mobile-pipeline"><div class="stage-tabs">${STAGES.map(stage => `<button class="stage-tab ${stage === state.mobileStage ? 'active' : ''}" data-mobile-stage="${stage}">${stage} · ${visible.filter(p => p.stage === stage).length}</button>`).join('')}</div><p class="swipe-instruction">Desliza una tarjeta → para avanzar o ← para regresarla. También puedes usar “Mover de etapa”.</p><div class="mobile-stage"><header class="mobile-stage__head"><h2>${state.mobileStage}</h2><span class="stage-count">${mobileProspects.length}</span></header>${mobileProspects.map(p => leadCard(p, { mobile: true })).join('') || emptyState('Esta etapa está vacía', 'Selecciona otra etapa o cambia el filtro.', false)}</div></section>
@@ -356,7 +428,7 @@ function calendarView() {
     </section>
     <section class="day-agenda">
       <header><div><p class="eyebrow">Día seleccionado</p><h2>${selectedLabel}</h2></div><span class="day-agenda__count">${selectedEntries.length} ${selectedEntries.length === 1 ? 'evento' : 'eventos'}</span></header>
-      <div class="day-agenda__list">${selectedEntries.length ? selectedEntries.map(entry => `<article class="agenda-event"><span class="agenda-event__rail ${entry.type}"></span><div><span class="micro muted">${entry.type === 'appointment' ? `${calendarTimeLabel(entry)} · Cita confirmada` : `Todo el día · Seguimiento`}</span><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.prospect.nextAction)} · ${escapeHtml(entry.prospect.owner)}</p></div><div class="agenda-event__actions"><a class="button button--google" href="${escapeHtml(googleCalendarUrl(entry))}" target="_blank" rel="noopener">Añadir a Google Calendar</a><button class="button button--quiet" data-edit="${entry.prospect.id}">Editar seguimiento</button></div></article>`).join('') : `<div class="empty"><strong>No hay eventos este día</strong><p class="muted micro">Selecciona otro día o crea un seguimiento con fecha.</p><button class="button button--primary" data-open-capture>Crear seguimiento</button></div>`}</div>
+      <div class="day-agenda__list">${selectedEntries.length ? selectedEntries.map(entry => `<article class="agenda-event"><span class="agenda-event__rail ${entry.type}"></span><div><span class="micro muted">${entry.type === 'appointment' ? `${calendarTimeLabel(entry)} · Cita confirmada` : `Todo el día · Seguimiento`}</span><h3>${escapeHtml(entry.prospect.name)}</h3><p>${escapeHtml(entry.prospect.nextAction)} · ${escapeHtml(entry.prospect.owner)}</p></div><div class="agenda-event__actions"><a class="button button--google" href="${escapeHtml(googleCalendarUrl(entry))}" target="_blank" rel="noopener">Añadir a Google Calendar</a><button class="button button--quiet" data-edit="${entry.prospect.id}">Editar seguimiento</button></div></article>`).join('') : `<div class="empty"><strong>No hay eventos este día</strong><p class="muted micro">Selecciona otro día o crea un seguimiento con fecha.</p><button class="button button--primary" data-open-capture>Crear seguimiento</button></div>`}</div>
     </section>
   </main>`;
 }
@@ -366,12 +438,32 @@ function contactsView() {
 }
 
 function directoryRows(prospects) {
-  return prospects.length ? prospects.map(p => `<article class="directory-row"><div><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.specialty)}${p.organization ? ` · ${escapeHtml(p.organization)}` : ''} · ${escapeHtml(p.source)}${p.phone ? ` · ${escapeHtml(p.phone)}` : ''}</p></div><span class="pill">${escapeHtml(p.stage)}</span><div style="display:flex;gap:8px;align-items:center"><button class="button button--quiet micro" data-edit="${p.id}" aria-label="Editar ${escapeHtml(p.name)}">Editar</button>${avatar(p.owner)}<button class="delete-button" data-delete="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}">×</button></div></article>`).join('') : emptyState('No hay contactos todavía', 'La primera tarjeta que captures aparecerá aquí.');
+  return prospects.length ? prospects.map(p => `<article class="directory-row is-clickable" data-summary="${p.id}"><div><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.specialty)}${p.organization ? ` · ${escapeHtml(p.organization)}` : ''} · ${escapeHtml(p.source)}${p.phone ? ` · ${escapeHtml(p.phone)}` : ''}</p></div><span class="pill">${escapeHtml(p.stage)}</span><div style="display:flex;gap:8px;align-items:center"><button class="button button--quiet micro" data-edit="${p.id}" aria-label="Editar ${escapeHtml(p.name)}">Editar</button>${avatar(p.owner)}<button class="delete-button" data-delete="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}">×</button></div></article>`).join('') : emptyState('No hay contactos todavía', 'La primera tarjeta que captures aparecerá aquí.');
+}
+
+function resourceCard(item) {
+  const live = Boolean(item.url);
+  return `<article class="resource-card ${live ? '' : 'is-soon'}">
+    <div class="resource-card__top"><h3>${escapeHtml(item.title)}</h3><span class="resource-tag ${live ? '' : 'resource-tag--soft'}">${escapeHtml(item.tag)}</span></div>
+    <p>${escapeHtml(item.desc)}</p>
+    ${live
+      ? `<a class="button button--primary" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Abrir ↗</a>`
+      : `<span class="resource-card__soon">En preparación</span>`}
+  </article>`;
+}
+
+function resourcesView() {
+  return `<main class="page">
+    <header class="page-header"><div><p class="eyebrow">Recursos</p><h1>Todo el material,<br><span>en un solo lugar.</span></h1></div></header>
+    <div class="resources">
+      ${RESOURCES.map(group => `<section class="resource-group"><h2 class="resource-group__title">${escapeHtml(group.category)}</h2><div class="resource-grid">${group.items.map(resourceCard).join('')}</div></section>`).join('')}
+    </div>
+  </main>`;
 }
 
 function render() {
   revokeObjectUrls();
-  const views = { today: todayView, pipeline: pipelineView, capture: captureView, calendar: calendarView, contacts: contactsView };
+  const views = { today: todayView, pipeline: pipelineView, capture: captureView, calendar: calendarView, contacts: contactsView, resources: resourcesView };
   const view = views[state.view] || todayView;
   app.innerHTML = `<div class="shell">${sidebar()}${view()}</div>${mobileNav()}`;
   bindViewEvents();
@@ -443,6 +535,61 @@ function closeProspectDialog() {
   state.photoId = null;
   state.editId = null;
   state.newId = null;
+}
+
+function openSummaryDialog(id) {
+  const p = state.prospects.find(x => x.id === id);
+  if (!p) return;
+  state.summaryId = id;
+  const overdue = isOverdue(p);
+  document.querySelector('#summaryName').textContent = p.name;
+  document.querySelector('#summaryEyebrow').textContent = `${p.specialty || 'Sin especialidad'}${p.organization ? ' · ' + p.organization : ''}`;
+  const rows = [
+    ['Etapa', `<span class="pill">${escapeHtml(p.stage)}</span>`],
+    ['Responsable', escapeHtml(p.owner || '—')],
+    ['Origen', escapeHtml(p.source || '—')],
+    ['Ubicación', escapeHtml(p.location || '—')],
+    ['Teléfono', p.phone ? `<a href="tel:${escapeHtml(onlyDigits(p.phone))}">${escapeHtml(p.phone)}</a>` : '—'],
+    ['Correo', p.email ? `<a href="mailto:${escapeHtml(p.email)}">${escapeHtml(p.email)}</a>` : '—'],
+    ['Cita confirmada', p.appointmentAt ? escapeHtml(formatDateTime(p.appointmentAt)) : '—'],
+    ['Última actualización', p.updatedAt ? escapeHtml(formatDateTime(p.updatedAt)) : '—']
+  ];
+  document.querySelector('#summaryBody').innerHTML = `
+    <div class="summary-hero ${overdue ? 'overdue' : ''}">
+      <span class="summary-hero__label">${overdue ? 'Acción vencida' : 'Siguiente acción'} · ${formatDate(p.dueDate)}</span>
+      <strong>${escapeHtml(p.nextAction || 'Sin acción definida')}</strong>
+    </div>
+    <dl class="summary-grid">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+    ${p.context ? `<div class="summary-context"><span class="micro muted">Contexto de campo</span><p>${escapeHtml(p.context)}</p></div>` : ''}
+  `;
+  document.querySelector('#summaryActions').innerHTML = `
+    <button class="button button--quiet" data-summary-complete="${p.id}">${p.completed ? 'Reabrir seguimiento' : 'Marcar como completado'}</button>
+    <button class="button button--quiet" data-summary-move="${p.id}">Mover de etapa</button>
+    <button class="button button--primary" data-summary-edit="${p.id}">Editar ficha</button>
+  `;
+  bindSummaryActions();
+  summaryDialog.hidden = false;
+}
+
+function bindSummaryActions() {
+  const editBtn = summaryDialog.querySelector('[data-summary-edit]');
+  if (editBtn) editBtn.onclick = () => { const id = editBtn.dataset.summaryEdit; closeSummaryDialog(); openEditDialog(id); };
+  const moveBtn = summaryDialog.querySelector('[data-summary-move]');
+  if (moveBtn) moveBtn.onclick = () => { const id = moveBtn.dataset.summaryMove; closeSummaryDialog(); openMoveDialog(id); };
+  const doneBtn = summaryDialog.querySelector('[data-summary-complete]');
+  if (doneBtn) doneBtn.onclick = async () => {
+    const p = state.prospects.find(x => x.id === doneBtn.dataset.summaryComplete);
+    if (!p) return;
+    closeSummaryDialog();
+    await store.update(p.id, { completed: !p.completed });
+    showToast(p.completed ? 'Seguimiento reabierto.' : 'Seguimiento completado.');
+    await refresh();
+  };
+}
+
+function closeSummaryDialog() {
+  summaryDialog.hidden = true;
+  state.summaryId = null;
 }
 
 function openMoveDialog(id) {
@@ -597,6 +744,10 @@ function exportCalendarMonth() {
 
 function bindViewEvents() {
   document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+  document.querySelectorAll('[data-summary]').forEach(el => el.addEventListener('click', event => {
+    if (event.target.closest('button, a, input, textarea, select, .drag-hint')) return;
+    openSummaryDialog(el.dataset.summary);
+  }));
   document.querySelectorAll('[data-open-capture]').forEach(button => button.addEventListener('click', openProspectDialog));
   document.querySelectorAll('[data-dashboard-filter]').forEach(button => button.addEventListener('click', () => {
     state.pipelineFilter = button.dataset.dashboardFilter;
@@ -753,9 +904,11 @@ form.addEventListener('submit', async event => {
 
 document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', closeProspectDialog));
 document.querySelectorAll('[data-close-move]').forEach(button => button.addEventListener('click', closeMoveDialog));
+document.querySelectorAll('[data-close-summary]').forEach(button => button.addEventListener('click', closeSummaryDialog));
 prospectDialog.addEventListener('click', event => { if (event.target === prospectDialog) closeProspectDialog(); });
 moveDialog.addEventListener('click', event => { if (event.target === moveDialog) closeMoveDialog(); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeProspectDialog(); closeMoveDialog(); } });
+summaryDialog.addEventListener('click', event => { if (event.target === summaryDialog) closeSummaryDialog(); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeProspectDialog(); closeMoveDialog(); closeSummaryDialog(); } });
 window.addEventListener('popstate', () => { state.view = new URLSearchParams(location.search).get('view') || 'today'; render(); });
 window.addEventListener('online', () => render());
 window.addEventListener('offline', () => render());
@@ -792,11 +945,18 @@ connectionForm.addEventListener('submit', async event => {
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 
+const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
+if (DEMO_MODE) store = createDemoStore();
+
 render();
-const connection = getConnectionSettings();
-if (!connection.configured || !connection.apiKey) {
-  openConnectionDialog(connection.configured ? '' : 'La dirección de sincronización todavía no está configurada.');
+if (DEMO_MODE) {
+  await refresh();
 } else {
-  try { await refresh(); }
-  catch (error) { openConnectionDialog(error.message); }
+  const connection = getConnectionSettings();
+  if (!connection.configured || !connection.apiKey) {
+    openConnectionDialog(connection.configured ? '' : 'La dirección de sincronización todavía no está configurada.');
+  } else {
+    try { await refresh(); }
+    catch (error) { openConnectionDialog(error.message); }
+  }
 }
