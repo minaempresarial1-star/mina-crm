@@ -25,12 +25,45 @@ const state = {
   photoId: null,
   photoCache: new Map(),
   editId: null,
+  newId: null,
+  saving: false,
   moveId: null,
   objectUrls: []
 };
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+}
+
+// Identificador estable generado en el cliente para que un guardado repetido
+// (doble toque, reintento por red lenta) resuelva a la MISMA fila y no duplique.
+function newUuid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const rand = (crypto.getRandomValues(new Uint8Array(1))[0]) % 16;
+    const value = char === 'x' ? rand : (rand & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+function normalizeName(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+// Busca una ficha existente que probablemente sea el mismo contacto,
+// por nombre normalizado o por teléfono (>= 7 dígitos).
+function findPossibleDuplicate({ name, phone }) {
+  const targetName = normalizeName(name);
+  const targetPhone = onlyDigits(phone);
+  return state.prospects.find(p => {
+    if (targetName && normalizeName(p.name) === targetName) return true;
+    if (targetPhone.length >= 7 && onlyDigits(p.phone) === targetPhone) return true;
+    return false;
+  });
 }
 
 function dateInputValue(date) {
@@ -348,6 +381,7 @@ function openProspectDialog() {
   state.photo = null;
   state.photoId = null;
   state.editId = null;
+  state.newId = newUuid();
   form.reset();
   document.querySelector('#dialogTitle').textContent = 'Activar una relación';
   document.querySelector('#dialogEyebrow').textContent = 'Nueva tarjeta';
@@ -408,6 +442,7 @@ function closeProspectDialog() {
   state.photo = null;
   state.photoId = null;
   state.editId = null;
+  state.newId = null;
 }
 
 function openMoveDialog(id) {
@@ -683,15 +718,37 @@ form.addEventListener('submit', async event => {
     photoId: state.photoId
   };
   const editingId = state.editId;
-  if (editingId) await store.update(editingId, prospect);
-  else await store.save(prospect);
-  closeProspectDialog();
+
+  // Aviso de posible duplicado al crear (no al editar).
   if (!editingId) {
-    state.view = 'capture';
-    const url = new URL(location.href); url.searchParams.set('view', state.view); history.replaceState({}, '', url);
+    const existing = findPossibleDuplicate(prospect);
+    if (existing && !window.confirm(`Ya existe una ficha de "${existing.name}" (${existing.stage}). ¿Registrar de todos modos como ficha nueva?`)) {
+      return;
+    }
   }
-  showToast(editingId ? `${prospect.name} quedó actualizado.` : `${prospect.name} quedó guardado con su primer seguimiento.`);
-  await refresh();
+
+  const saveButton = document.querySelector('#saveProspectButton');
+  const originalLabel = saveButton.textContent;
+  state.saving = true;
+  saveButton.disabled = true;
+  saveButton.textContent = 'Guardando…';
+  try {
+    // El id estable (state.newId) hace idempotente el guardado: un doble envío
+    // resuelve a la misma fila y el backend actualiza en vez de duplicar.
+    if (editingId) await store.update(editingId, prospect);
+    else await store.save({ ...prospect, id: state.newId });
+    closeProspectDialog();
+    if (!editingId) {
+      state.view = 'capture';
+      const url = new URL(location.href); url.searchParams.set('view', state.view); history.replaceState({}, '', url);
+    }
+    showToast(editingId ? `${prospect.name} quedó actualizado.` : `${prospect.name} quedó guardado con su primer seguimiento.`);
+    await refresh();
+  } finally {
+    state.saving = false;
+    saveButton.disabled = false;
+    saveButton.textContent = originalLabel;
+  }
 });
 
 document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', closeProspectDialog));
