@@ -7,8 +7,8 @@ const RESOURCES = [
   {
     category: 'Prospección en persona',
     items: [
-      { title: 'Herramienta de reunión · Médicos', desc: 'Ciclo completo Apertura · Cuaje · Cierre: calculador de fuga patrimonial, checklist de blindaje, plan personalizado y cierre.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/medicos.html', tag: 'En vivo' },
-      { title: 'Simulador “Dos Actos”', desc: 'Simulador patrimonial general para mostrar en vivo el costo de dejar el dinero estancado.', url: 'https://alejandrohuante16-jpg.github.io/mario-medicos/simulador.html', tag: 'En vivo' }
+      { title: 'Herramienta de reunión · Médicos', desc: 'Ciclo completo Apertura · Cuaje · Cierre: calculador de fuga patrimonial, checklist de blindaje, plan personalizado y cierre.', url: 'https://minaempresarial1-star.github.io/mario-medicos/medicos.html', tag: 'En vivo' },
+      { title: 'Simulador “Dos Actos”', desc: 'Simulador patrimonial general para mostrar en vivo el costo de dejar el dinero estancado.', url: 'https://minaempresarial1-star.github.io/mario-medicos/simulador.html', tag: 'En vivo' }
     ]
   },
   {
