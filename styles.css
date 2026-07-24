@@ -254,6 +254,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .pipeline-hero > div:first-child { grid-column: 1 / -1; }
   .calendar-toolbar { grid-template-columns: 1fr auto; }
   .calendar-toolbar__nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
+
+  /* La barra lateral se oculta aquí; el menú inferior debe aparecer desde este
+     mismo ancho para que no quede una franja (700–900px) sin ninguna navegación. */
+  body { padding-bottom: calc(72px + var(--safe-bottom)); }
+  .page { padding-bottom: 90px; }
+  .mobile-nav { position: fixed; z-index: 70; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(5, 1fr); padding: 7px 8px calc(7px + var(--safe-bottom)); background: rgba(11,21,56,.97); backdrop-filter: blur(12px); }
+  .mobile-nav button { display: grid; gap: 3px; place-items: center; padding: 6px 3px; color: #aeb7cc; border: 0; background: transparent; font-size: 9px; cursor: pointer; }
+  .mobile-nav button span { font-size: 18px; }
+  .mobile-nav button.active { color: white; }
+  .mobile-nav button.capture { transform: translateY(-13px); }
+  .mobile-nav button.capture span { display: grid; width: 48px; height: 48px; place-items: center; color: var(--navy); background: var(--amber); border-radius: 50%; box-shadow: 0 8px 20px rgba(0,0,0,.3); }
 }
 
 @media (max-width: 700px) {
